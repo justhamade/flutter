@@ -67,6 +67,10 @@
 		<true/>
 		<key>NSCameraUsageDescription</key>
 		<string>Workout photos</string>
+		<key>NSHealthShareUsageDescription</key>
+		<string>wger uses your health data to automatically sync weight, workout, and body measurements from Apple Health</string>
+		<key>NSHealthUpdateUsageDescription</key>
+		<string>wger writes workout logs and body measurements to Apple Health</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

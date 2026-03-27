@@ -21,6 +21,7 @@ import 'package:wger/l10n/generated/app_localizations.dart';
 import 'package:wger/screens/settings_plates_screen.dart';
 
 import './settings/exercise_cache.dart';
+import './settings/health_sync.dart';
 import './settings/ingredient_cache.dart';
 import './settings/language.dart';
 import './settings/theme.dart';
@@ -43,6 +44,8 @@ class SettingsPage extends StatelessWidget {
           ),
           const SettingsExerciseCache(),
           const SettingsIngredientCache(),
+          ListTile(title: Text('Health', style: Theme.of(context).textTheme.headlineSmall)),
+          const HealthSyncSettingsTile(),
           ListTile(title: Text(i18n.others, style: Theme.of(context).textTheme.headlineSmall)),
           const SettingsTheme(),
           const SettingsLanguage(),
