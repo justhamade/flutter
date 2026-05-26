@@ -17,6 +17,7 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +25,7 @@ import 'package:wger/helpers/consts.dart';
 import 'package:wger/l10n/generated/app_localizations.dart';
 import 'package:wger/models/body_weight/weight_entry.dart';
 import 'package:wger/providers/body_weight.dart';
+import 'package:wger/providers/health_sync.dart';
 import 'package:wger/providers/user.dart';
 import 'package:wger/widgets/measurements/charts.dart';
 
@@ -219,6 +221,15 @@ class WeightForm extends StatelessWidget {
               _weightEntry.id == null
                   ? await provider.addEntry(_weightEntry)
                   : await provider.editEntry(_weightEntry);
+
+              // Write-through: push to Apple Health if sync is enabled
+              try {
+                final riverpodContainer = ProviderScope.containerOf(context);
+                final notifier = riverpodContainer.read(healthSyncProvider.notifier);
+                await notifier.pushWeightEntryToHealth(_weightEntry);
+              } catch (_) {
+                // Silently fail — write-through is best-effort
+              }
 
               if (context.mounted) {
                 Navigator.of(context).pop();

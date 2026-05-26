@@ -1268,9 +1268,9 @@
   "@healthSync": {
     "description": "Title for the health platform sync setting"
   },
-  "healthSyncDescription": "Import weight from Apple Health or Health Connect",
+  "healthSyncDescription": "Import and export weight, body comp, and measurements to Apple Health",
   "@healthSyncDescription": {
-    "description": "Subtitle for the health platform sync setting"
+    "description": "Subtitle for the health platform sync setting (updated for bidirectional)"
   },
   "healthSyncSuccess": "Synced {count} weight entries from Health",
   "@healthSyncSuccess": {

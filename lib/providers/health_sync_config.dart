@@ -227,3 +227,17 @@ int? syncDataTypeToMeasurementCategory(SyncDataType type) {
       return null;
   }
 }
+
+/// Map a wger measurement category ID back to the corresponding [SyncDataType].
+///
+/// Returns null if the category ID doesn't map to a supported sync type.
+SyncDataType? syncDataTypeFromMeasurementCategory(int categoryId) {
+  switch (categoryId) {
+    case 13:
+      return SyncDataType.bodyFat;
+    case 2:
+      return SyncDataType.waist;
+    default:
+      return null;
+  }
+}

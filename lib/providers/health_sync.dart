@@ -23,6 +23,7 @@ import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wger/helpers/shared_preferences.dart';
 import 'package:wger/models/body_weight/weight_entry.dart';
+import 'package:wger/models/measurements/measurement_entry.dart';
 import 'package:wger/providers/base_provider.dart';
 import 'package:wger/providers/health_sync_config.dart';
 import 'package:wger/providers/wger_base_riverpod.dart';
@@ -229,24 +230,45 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
                 typeState.direction == SyncDirection.bidirectional) {
               totalCount += await _syncWeightPush();
             }
-          case SyncDataType.bodyFat:
-            totalCount += await _syncMeasurementPull(
-              SyncDataType.bodyFat,
-              HealthDataType.BODY_FAT_PERCENTAGE,
-              isMetric: false, // body fat % has no unit conversion
-            );
-          case SyncDataType.waist:
-            totalCount += await _syncMeasurementPull(
-              SyncDataType.waist,
-              HealthDataType.WAIST_CIRCUMFERENCE,
-              isMetric: isMetric,
-            );
-          case SyncDataType.leanMass:
-            totalCount += await _syncMeasurementPull(
-              SyncDataType.leanMass,
-              HealthDataType.LEAN_BODY_MASS,
-              isMetric: isMetric,
-            );
+case SyncDataType.bodyFat:
+              totalCount += await _syncMeasurementPull(
+                SyncDataType.bodyFat,
+                HealthDataType.BODY_FAT_PERCENTAGE,
+                isMetric: false,
+              );
+              if (typeState.direction == SyncDirection.push ||
+                  typeState.direction == SyncDirection.bidirectional) {
+                totalCount += await _syncMeasurementPush(
+                  SyncDataType.bodyFat,
+                  HealthDataType.BODY_FAT_PERCENTAGE,
+                );
+              }
+            case SyncDataType.waist:
+              totalCount += await _syncMeasurementPull(
+                SyncDataType.waist,
+                HealthDataType.WAIST_CIRCUMFERENCE,
+                isMetric: isMetric,
+              );
+              if (typeState.direction == SyncDirection.push ||
+                  typeState.direction == SyncDirection.bidirectional) {
+                totalCount += await _syncMeasurementPush(
+                  SyncDataType.waist,
+                  HealthDataType.WAIST_CIRCUMFERENCE,
+                );
+              }
+            case SyncDataType.leanMass:
+              totalCount += await _syncMeasurementPull(
+                SyncDataType.leanMass,
+                HealthDataType.LEAN_BODY_MASS,
+                isMetric: isMetric,
+              );
+              if (typeState.direction == SyncDirection.push ||
+                  typeState.direction == SyncDirection.bidirectional) {
+                totalCount += await _syncMeasurementPush(
+                  SyncDataType.leanMass,
+                  HealthDataType.LEAN_BODY_MASS,
+                );
+              }
           case SyncDataType.workouts:
             // TODO: Implement workout sync in a follow-up module
             _logger.info('Workout sync not yet implemented — skipping');
@@ -354,11 +376,134 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
 
   // ───────── Weight Push (wger → Apple Health) ─────────
 
+  /// Push all new wger weight entries to Apple Health.
+  ///
+  /// Reads entries from the wger backend that haven't been pushed yet
+  /// (tracked via a set of pushed entry IDs in SharedPreferences) and
+  /// writes them to Apple Health Kit via the `health` package.
   Future<int> _syncWeightPush() async {
-    // TODO: Read existing wger weight entries and write to Apple Health
-    // Requires HealthDataType.WEIGHT with WRITE permission.
-    _logger.info('Weight push not yet implemented');
-    return 0;
+    if (!Platform.isIOS) {
+      _logger.info('Weight push only supported on iOS');
+      return 0;
+    }
+
+    final prefs = PreferenceHelper.instance;
+    final enabled = await prefs.getHealthSyncEnabled();
+    if (!enabled) return 0;
+
+    // Ensure WRITE permission
+    final hasPerms = await _health.hasPermissions(
+      [HealthDataType.WEIGHT],
+      permissions: [HealthDataAccess.WRITE],
+    );
+    if (hasPerms != true) {
+      _logger.warning('No WRITE permission for weight — skipping push');
+      return 0;
+    }
+
+    // Load set of already-pushed entry IDs
+    final pushedIdsStr = await prefs.getTypeLastSyncTimestamp('weight_pushed_ids');
+    final pushedIds = pushedIdsStr != null
+        ? pushedIdsStr.split(',').where((s) => s.isNotEmpty).map(int.parse).toSet()
+        : <int>{};
+
+    _logger.info('Pushing weight entries to Apple Health (${pushedIds.length} already pushed)');
+
+    int pushCount = 0;
+    try {
+      // Fetch all existing weight entries from wger
+      final data = await _baseProvider.fetchPaginated(
+        _baseProvider.makeUrl(
+          _weightEntryUrl,
+          query: {'ordering': '-date', 'limit': '200'},
+        ),
+      );
+
+      for (final entryJson in data) {
+        final entry = WeightEntry.fromJson(entryJson);
+        if (entry.id == null || pushedIds.contains(entry.id!)) continue;
+
+        final weightKg = entry.weight.toDouble();
+        final timestamp = entry.date;
+        final endTime = timestamp.add(const Duration(seconds: 1));
+
+        try {
+          await _health.writeHealthData(
+            value: weightKg,
+            type: HealthDataType.WEIGHT,
+            startTime: timestamp,
+            endTime: endTime,
+          );
+          pushedIds.add(entry.id!);
+          pushCount++;
+        } catch (e) {
+          _logger.warning('Failed to push weight entry ${entry.id}: $e');
+        }
+      }
+
+      // Persist pushed IDs
+      await prefs.setTypeLastSyncTimestamp(
+        'weight_pushed_ids',
+        pushedIds.join(','),
+      );
+
+      _logger.info('Pushed $pushCount weight entries to Apple Health');
+    } catch (e) {
+      _logger.warning('Weight push failed: $e');
+    }
+
+    return pushCount;
+  }
+
+  /// Push a single weight entry to Apple Health immediately (write-through).
+  ///
+  /// Called after the user saves a new weight entry in the app.
+  /// Safe to call even if sync is disabled — checks internally.
+  Future<bool> pushWeightEntryToHealth(WeightEntry entry) async {
+    if (!Platform.isIOS || entry.id == null) return false;
+
+    try {
+      // Check if health sync is enabled
+      final prefs = PreferenceHelper.instance;
+      final enabled = await prefs.getHealthSyncEnabled();
+      if (!enabled) return false;
+
+      // Check direction allows push
+      final typeState = state.typeStates[SyncDataType.weight] ?? const SyncTypeState();
+      if (typeState.direction == SyncDirection.pull) return false;
+
+      // Ensure WRITE permission
+      final hasPerms = await _health.hasPermissions(
+        [HealthDataType.WEIGHT],
+        permissions: [HealthDataAccess.WRITE],
+      );
+      if (hasPerms != true) return false;
+
+      final weightKg = entry.weight.toDouble();
+      final timestamp = entry.date;
+      final endTime = timestamp.add(const Duration(seconds: 1));
+
+      await _health.writeHealthData(
+        value: weightKg,
+        type: HealthDataType.WEIGHT,
+        startTime: timestamp,
+        endTime: endTime,
+      );
+
+      // Track as pushed
+      final pushedStr = await prefs.getTypeLastSyncTimestamp('weight_pushed_ids');
+      final pushedIds = pushedStr != null
+          ? pushedStr.split(',').where((s) => s.isNotEmpty).map(int.parse).toSet()
+          : <int>{};
+      pushedIds.add(entry.id!);
+      await prefs.setTypeLastSyncTimestamp('weight_pushed_ids', pushedIds.join(','));
+
+      _logger.info('Pushed weight entry ${entry.id} to Apple Health (write-through)');
+      return true;
+    } catch (e) {
+      _logger.warning('Write-through weight push failed: $e');
+      return false;
+    }
   }
 
   // ───────── Body Measurement Pull (Apple Health → wger) ─────────
@@ -454,6 +599,132 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
     _logger.info('Synced $syncedCount ${syncDataTypeDisplayName(syncType)} entries');
     _updateTypeState(syncType, syncedCount: syncedCount);
     return syncedCount;
+  }
+
+  // ───────── Body Measurement Push (wger → Apple Health) ─────────
+
+  /// Push all new measurement entries from wger to Apple Health.
+  Future<int> _syncMeasurementPush(
+    SyncDataType syncType,
+    HealthDataType healthType,
+  ) async {
+    if (!Platform.isIOS) return 0;
+
+    final prefs = PreferenceHelper.instance;
+    final enabled = await prefs.getHealthSyncEnabled();
+    if (!enabled) return 0;
+
+    // Ensure WRITE permission
+    final hasPerms = await _health.hasPermissions(
+      [healthType],
+      permissions: [HealthDataAccess.WRITE],
+    );
+    if (hasPerms != true) {
+      _logger.warning('No WRITE permission for $healthType — skipping push');
+      return 0;
+    }
+
+    final typeKey = syncDataTypeToPrefKey(syncType);
+    final pushedKey = '${typeKey}_pushed_ids';
+    final pushedStr = await prefs.getTypeLastSyncTimestamp(pushedKey);
+    final pushedIds = pushedStr != null
+        ? pushedStr.split(',').where((s) => s.isNotEmpty).map(int.parse).toSet()
+        : <int>{};
+
+    _logger.info('Pushing ${syncDataTypeDisplayName(syncType)} to Apple Health');
+
+    final categoryId = syncDataTypeToMeasurementCategory(syncType);
+    int pushCount = 0;
+    try {
+      final query = categoryId != null
+          ? {'category': categoryId.toString(), 'limit': '200'}
+          : {'limit': '200'};
+
+      final data = await _baseProvider.fetchPaginated(
+        _baseProvider.makeUrl(_measurementUrl, query: query),
+      );
+
+      for (final entryJson in data) {
+        final entry = MeasurementEntry.fromJson(entryJson);
+        if (entry.id == null || pushedIds.contains(entry.id!)) continue;
+
+        final value = entry.value.toDouble();
+        final timestamp = entry.date;
+        final endTime = timestamp.add(const Duration(seconds: 1));
+
+        try {
+          await _health.writeHealthData(
+            value: value,
+            type: healthType,
+            startTime: timestamp,
+            endTime: endTime,
+          );
+          pushedIds.add(entry.id!);
+          pushCount++;
+        } catch (e) {
+          _logger.warning('Failed to push ${syncDataTypeDisplayName(syncType)} '
+              'entry ${entry.id}: $e');
+        }
+      }
+
+      await prefs.setTypeLastSyncTimestamp(pushedKey, pushedIds.join(','));
+
+      _logger.info('Pushed $pushCount ${syncDataTypeDisplayName(syncType)} entries');
+    } catch (e) {
+      _logger.warning('Measurement push failed: $e');
+    }
+
+    return pushCount;
+  }
+
+  /// Push a single measurement entry to Apple Health immediately (write-through).
+  Future<bool> pushMeasurementToHealth(MeasurementEntry entry) async {
+    if (!Platform.isIOS || entry.id == null) return false;
+
+    // Only push body composition types that map to Apple Health
+    final syncType = syncDataTypeFromMeasurementCategory(entry.category);
+    if (syncType == null) return false;
+
+    try {
+      final prefs = PreferenceHelper.instance;
+      final enabled = await prefs.getHealthSyncEnabled();
+      if (!enabled) return false;
+
+      final typeState = state.typeStates[syncType] ?? const SyncTypeState();
+      if (typeState.direction == SyncDirection.pull) return false;
+
+      final healthType = _healthTypeFor(syncType);
+
+      final hasPerms = await _health.hasPermissions(
+        [healthType],
+        permissions: [HealthDataAccess.WRITE],
+      );
+      if (hasPerms != true) return false;
+
+      final value = entry.value.toDouble();
+      final timestamp = entry.date;
+      final endTime = timestamp.add(const Duration(seconds: 1));
+
+      await _health.writeHealthData(
+        value: value,
+        type: healthType,
+        startTime: timestamp,
+        endTime: endTime);
+
+      final typeKey = syncDataTypeToPrefKey(syncType);
+      final pushedKey = '${typeKey}_pushed_ids';
+      final pushedStr = await prefs.getTypeLastSyncTimestamp(pushedKey);
+      final pushedIds = pushedStr != null
+          ? pushedStr.split(',').where((s) => s.isNotEmpty).map(int.parse).toSet()
+          : <int>{};
+      pushedIds.add(entry.id!);
+      await prefs.setTypeLastSyncTimestamp(pushedKey, pushedIds.join(','));
+
+      return true;
+    } catch (e) {
+      _logger.warning('Measurement write-through push failed: $e');
+      return false;
+    }
   }
 
   // ───────── Helpers ─────────

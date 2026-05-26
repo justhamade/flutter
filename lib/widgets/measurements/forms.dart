@@ -17,12 +17,14 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wger/helpers/consts.dart';
 import 'package:wger/l10n/generated/app_localizations.dart';
 import 'package:wger/models/measurements/measurement_category.dart';
 import 'package:wger/models/measurements/measurement_entry.dart';
+import 'package:wger/providers/health_sync.dart';
 import 'package:wger/providers/measurement.dart';
 
 class MeasurementCategoryForm extends StatelessWidget {
@@ -352,6 +354,23 @@ class MeasurementEntryForm extends StatelessWidget {
                       _entryData['notes'],
                       _entryData['date'],
                     );
+
+              // Write-through: push to Apple Health if sync is enabled
+              try {
+                final riverpodContainer = ProviderScope.containerOf(context);
+                final notifier = riverpodContainer.read(healthSyncProvider.notifier);
+                await notifier.pushMeasurementToHealth(
+                  MeasurementEntry(
+                    id: _entryData['id'],
+                    category: _entryData['category'],
+                    date: _entryData['date'],
+                    value: _entryData['value'] is String ? 0 : _entryData['value'],
+                    notes: _entryData['notes'] ?? '',
+                  ),
+                );
+              } catch (_) {
+                // Silently fail — write-through is best-effort
+              }
 
               if (context.mounted) {
                 Navigator.of(context).pop();
