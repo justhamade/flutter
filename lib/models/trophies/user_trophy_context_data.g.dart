@@ -36,15 +36,16 @@ ContextData _$ContextDataFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$ContextDataToJson(ContextData instance) => <String, dynamic>{
-  'log_id': instance.logId,
-  'date': instance.date.toIso8601String(),
-  'session_id': instance.sessionId,
-  'exercise_id': instance.exerciseId,
-  'repetitions_unit_id': instance.repetitionsUnitId,
-  'repetitions': instance.repetitions,
-  'weight_unit_id': instance.weightUnitId,
-  'weight': instance.weight,
-  'iteration': instance.iteration,
-  'one_rep_max_estimate': instance.oneRepMaxEstimate,
-};
+Map<String, dynamic> _$ContextDataToJson(ContextData instance) =>
+    <String, dynamic>{
+      'log_id': instance.logId,
+      'date': instance.date.toIso8601String(),
+      'session_id': instance.sessionId,
+      'exercise_id': instance.exerciseId,
+      'repetitions_unit_id': instance.repetitionsUnitId,
+      'repetitions': instance.repetitions,
+      'weight_unit_id': instance.weightUnitId,
+      'weight': instance.weight,
+      'iteration': instance.iteration,
+      'one_rep_max_estimate': instance.oneRepMaxEstimate,
+    };

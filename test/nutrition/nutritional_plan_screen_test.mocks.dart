@@ -31,22 +31,27 @@ import 'package:wger/providers/base_provider.dart' as _i4;
 // ignore_for_file: invalid_use_of_internal_member
 
 class _FakeAuthProvider_0 extends _i1.SmartFake implements _i2.AuthProvider {
-  _FakeAuthProvider_0(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeAuthProvider_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeClient_1 extends _i1.SmartFake implements _i3.Client {
-  _FakeClient_1(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeClient_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeUri_2 extends _i1.SmartFake implements Uri {
-  _FakeUri_2(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeUri_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeResponse_3 extends _i1.SmartFake implements _i3.Response {
-  _FakeResponse_3(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeResponse_3(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
-class _FakeStreamedResponse_4 extends _i1.SmartFake implements _i3.StreamedResponse {
+class _FakeStreamedResponse_4 extends _i1.SmartFake
+    implements _i3.StreamedResponse {
   _FakeStreamedResponse_4(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
@@ -243,10 +248,13 @@ class MockAuthProvider extends _i1.Mock implements _i2.AuthProvider {
 
   @override
   bool get dataInit =>
-      (super.noSuchMethod(Invocation.getter(#dataInit), returnValue: false) as bool);
+      (super.noSuchMethod(Invocation.getter(#dataInit), returnValue: false)
+          as bool);
 
   @override
-  bool get isAuth => (super.noSuchMethod(Invocation.getter(#isAuth), returnValue: false) as bool);
+  bool get isAuth =>
+      (super.noSuchMethod(Invocation.getter(#isAuth), returnValue: false)
+          as bool);
 
   @override
   set token(String? value) => super.noSuchMethod(
@@ -298,7 +306,8 @@ class MockAuthProvider extends _i1.Mock implements _i2.AuthProvider {
 
   @override
   bool get hasListeners =>
-      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false) as bool);
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
 
   @override
   void clearServerConfigWarning() => super.noSuchMethod(

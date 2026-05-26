@@ -38,13 +38,14 @@ WorkoutSession _$WorkoutSessionFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$WorkoutSessionToJson(WorkoutSession instance) => <String, dynamic>{
-  'id': instance.id,
-  'routine': instance.routineId,
-  'day': instance.dayId,
-  'date': dateToYYYYMMDD(instance.date),
-  'impression': numToString(instance.impression),
-  'notes': instance.notes,
-  'time_start': timeToString(instance.timeStart),
-  'time_end': timeToString(instance.timeEnd),
-};
+Map<String, dynamic> _$WorkoutSessionToJson(WorkoutSession instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'routine': instance.routineId,
+      'day': instance.dayId,
+      'date': dateToYYYYMMDD(instance.date),
+      'impression': numToString(instance.impression),
+      'notes': instance.notes,
+      'time_start': timeToString(instance.timeStart),
+      'time_end': timeToString(instance.timeEnd),
+    };

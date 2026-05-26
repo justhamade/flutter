@@ -3,13 +3,13 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i7;
-import 'dart:ui' as _i8;
+import 'dart:async' as _i8;
+import 'dart:ui' as _i6;
 
 import 'package:flutter/material.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:shared_preferences/shared_preferences.dart' as _i3;
-import 'package:wger/models/user/profile.dart' as _i6;
+import 'package:wger/models/user/profile.dart' as _i7;
 import 'package:wger/providers/base_provider.dart' as _i2;
 import 'package:wger/providers/user.dart' as _i4;
 
@@ -101,13 +101,19 @@ class MockUserProvider extends _i1.Mock implements _i4.UserProvider {
   );
 
   @override
+  set userLocale(_i6.Locale? value) => super.noSuchMethod(
+    Invocation.setter(#userLocale, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
   set prefs(_i3.SharedPreferencesAsync? value) => super.noSuchMethod(
     Invocation.setter(#prefs, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set profile(_i6.Profile? value) => super.noSuchMethod(
+  set profile(_i7.Profile? value) => super.noSuchMethod(
     Invocation.setter(#profile, value),
     returnValueForMissingStub: null,
   );
@@ -132,25 +138,25 @@ class MockUserProvider extends _i1.Mock implements _i4.UserProvider {
           as bool);
 
   @override
-  _i7.Future<void> setDashboardWidgetVisible(
+  _i8.Future<void> setDashboardWidgetVisible(
     _i4.DashboardWidget? key,
     bool? visible,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#setDashboardWidgetVisible, [key, visible]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i7.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i7.Future<void> setDashboardOrder(int? oldIndex, int? newIndex) =>
+  _i8.Future<void> setDashboardOrder(int? oldIndex, int? newIndex) =>
       (super.noSuchMethod(
             Invocation.method(#setDashboardOrder, [oldIndex, newIndex]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i7.Future<void>);
+          as _i8.Future<void>);
 
   @override
   void setThemeMode(_i5.ThemeMode? mode) => super.noSuchMethod(
@@ -159,40 +165,49 @@ class MockUserProvider extends _i1.Mock implements _i4.UserProvider {
   );
 
   @override
-  _i7.Future<void> fetchAndSetProfile() =>
+  _i8.Future<void> setUserLocale(_i6.Locale? locale) =>
+      (super.noSuchMethod(
+            Invocation.method(#setUserLocale, [locale]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> fetchAndSetProfile() =>
       (super.noSuchMethod(
             Invocation.method(#fetchAndSetProfile, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i7.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i7.Future<void> saveProfile() =>
+  _i8.Future<void> saveProfile() =>
       (super.noSuchMethod(
             Invocation.method(#saveProfile, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i7.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  _i7.Future<void> verifyEmail() =>
+  _i8.Future<void> verifyEmail() =>
       (super.noSuchMethod(
             Invocation.method(#verifyEmail, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
           )
-          as _i7.Future<void>);
+          as _i8.Future<void>);
 
   @override
-  void addListener(_i8.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i6.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#addListener, [listener]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void removeListener(_i8.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i6.VoidCallback? listener) => super.noSuchMethod(
     Invocation.method(#removeListener, [listener]),
     returnValueForMissingStub: null,
   );

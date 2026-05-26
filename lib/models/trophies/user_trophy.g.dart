@@ -30,11 +30,12 @@ UserTrophy _$UserTrophyFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$UserTrophyToJson(UserTrophy instance) => <String, dynamic>{
-  'id': instance.id,
-  'trophy': instance.trophy,
-  'earned_at': instance.earnedAt.toIso8601String(),
-  'progress': instance.progress,
-  'is_notified': instance.isNotified,
-  'context_data': instance.contextData,
-};
+Map<String, dynamic> _$UserTrophyToJson(UserTrophy instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'trophy': instance.trophy,
+      'earned_at': instance.earnedAt.toIso8601String(),
+      'progress': instance.progress,
+      'is_notified': instance.isNotified,
+      'context_data': instance.contextData,
+    };

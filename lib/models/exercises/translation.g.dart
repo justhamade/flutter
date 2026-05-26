@@ -22,7 +22,9 @@ Translation _$TranslationFromJson(Map<String, dynamic> json) {
   return Translation(
       id: (json['id'] as num?)?.toInt(),
       uuid: json['uuid'] as String?,
-      created: json['created'] == null ? null : DateTime.parse(json['created'] as String),
+      created: json['created'] == null
+          ? null
+          : DateTime.parse(json['created'] as String),
       name: json['name'] as String,
       description: json['description'] as String,
       descriptionSource: json['description_source'] as String? ?? '',
@@ -37,13 +39,14 @@ Translation _$TranslationFromJson(Map<String, dynamic> json) {
         .toList();
 }
 
-Map<String, dynamic> _$TranslationToJson(Translation instance) => <String, dynamic>{
-  'id': instance.id,
-  'uuid': instance.uuid,
-  'language': instance.languageId,
-  'created': instance.created?.toIso8601String(),
-  'exercise': instance.exerciseId,
-  'name': instance.name,
-  'description': instance.description,
-  'description_source': instance.descriptionSource,
-};
+Map<String, dynamic> _$TranslationToJson(Translation instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'uuid': instance.uuid,
+      'language': instance.languageId,
+      'created': instance.created?.toIso8601String(),
+      'exercise': instance.exerciseId,
+      'name': instance.name,
+      'description': instance.description,
+      'description_source': instance.descriptionSource,
+    };

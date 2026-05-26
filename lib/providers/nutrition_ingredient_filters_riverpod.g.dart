@@ -13,7 +13,8 @@ part of 'nutrition_ingredient_filters_riverpod.dart';
 final ingredientFiltersProvider = IngredientFiltersNotifierProvider._();
 
 final class IngredientFiltersNotifierProvider
-    extends $AsyncNotifierProvider<IngredientFiltersNotifier, IngredientFilters> {
+    extends
+        $AsyncNotifierProvider<IngredientFiltersNotifier, IngredientFilters> {
   IngredientFiltersNotifierProvider._()
     : super(
         from: null,
@@ -33,14 +34,17 @@ final class IngredientFiltersNotifierProvider
   IngredientFiltersNotifier create() => IngredientFiltersNotifier();
 }
 
-String _$ingredientFiltersNotifierHash() => r'3fb2ae558584d5ea3cce83679b6682ef5b1ba6f2';
+String _$ingredientFiltersNotifierHash() =>
+    r'3fb2ae558584d5ea3cce83679b6682ef5b1ba6f2';
 
-abstract class _$IngredientFiltersNotifier extends $AsyncNotifier<IngredientFilters> {
+abstract class _$IngredientFiltersNotifier
+    extends $AsyncNotifier<IngredientFilters> {
   FutureOr<IngredientFilters> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<IngredientFilters>, IngredientFilters>;
+    final ref =
+        this.ref as $Ref<AsyncValue<IngredientFilters>, IngredientFilters>;
     final element =
         ref.element
             as $ClassProviderElement<

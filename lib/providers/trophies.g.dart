@@ -13,7 +13,12 @@ part of 'trophies.dart';
 final trophyRepositoryProvider = TrophyRepositoryProvider._();
 
 final class TrophyRepositoryProvider
-    extends $FunctionalProvider<TrophyRepository, TrophyRepository, TrophyRepository>
+    extends
+        $FunctionalProvider<
+          TrophyRepository,
+          TrophyRepository,
+          TrophyRepository
+        >
     with $Provider<TrophyRepository> {
   TrophyRepositoryProvider._()
     : super(
@@ -82,7 +87,8 @@ final class TrophyStateNotifierProvider
   }
 }
 
-String _$trophyStateNotifierHash() => r'c80c732272cf843b698f28152f60b9a5f37ee449';
+String _$trophyStateNotifierHash() =>
+    r'c80c732272cf843b698f28152f60b9a5f37ee449';
 
 abstract class _$TrophyStateNotifier extends $Notifier<TrophyState> {
   TrophyState build();

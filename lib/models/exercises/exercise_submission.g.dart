@@ -32,7 +32,8 @@ _ExerciseTranslationSubmissionApi _$ExerciseTranslationSubmissionApiFromJson(
   aliases:
       (json['aliases'] as List<dynamic>?)
           ?.map(
-            (e) => ExerciseAliasSubmissionApi.fromJson(e as Map<String, dynamic>),
+            (e) =>
+                ExerciseAliasSubmissionApi.fromJson(e as Map<String, dynamic>),
           )
           .toList() ??
       const [],
@@ -62,11 +63,15 @@ _ExerciseSubmissionApi _$ExerciseSubmissionApiFromJson(
   Map<String, dynamic> json,
 ) => _ExerciseSubmissionApi(
   category: (json['category'] as num).toInt(),
-  muscles: (json['muscles'] as List<dynamic>).map((e) => (e as num).toInt()).toList(),
+  muscles: (json['muscles'] as List<dynamic>)
+      .map((e) => (e as num).toInt())
+      .toList(),
   musclesSecondary: (json['muscles_secondary'] as List<dynamic>)
       .map((e) => (e as num).toInt())
       .toList(),
-  equipment: (json['equipment'] as List<dynamic>).map((e) => (e as num).toInt()).toList(),
+  equipment: (json['equipment'] as List<dynamic>)
+      .map((e) => (e as num).toInt())
+      .toList(),
   author: json['license_author'] as String,
   variationGroup: json['variation_group'] as String?,
   variationConnectTo: (json['variations_connect_to'] as num?)?.toInt(),

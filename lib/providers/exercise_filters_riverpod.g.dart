@@ -33,9 +33,11 @@ final class ExerciseFiltersNotifierProvider
   ExerciseFiltersNotifier create() => ExerciseFiltersNotifier();
 }
 
-String _$exerciseFiltersNotifierHash() => r'cf29351e05aabc8ef131eff2a4fdb076827714fe';
+String _$exerciseFiltersNotifierHash() =>
+    r'cf29351e05aabc8ef131eff2a4fdb076827714fe';
 
-abstract class _$ExerciseFiltersNotifier extends $AsyncNotifier<ExerciseFilters> {
+abstract class _$ExerciseFiltersNotifier
+    extends $AsyncNotifier<ExerciseFilters> {
   FutureOr<ExerciseFilters> build();
   @$mustCallSuper
   @override

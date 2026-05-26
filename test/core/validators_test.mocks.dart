@@ -3910,6 +3910,28 @@ class MockAppLocalizations extends _i1.Mock implements _i2.AppLocalizations {
           as String);
 
   @override
+  String get appLanguage =>
+      (super.noSuchMethod(
+            Invocation.getter(#appLanguage),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#appLanguage),
+            ),
+          )
+          as String);
+
+  @override
+  String get appLanguageSystem =>
+      (super.noSuchMethod(
+            Invocation.getter(#appLanguageSystem),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#appLanguageSystem),
+            ),
+          )
+          as String);
+
+  @override
   String get productNotFoundOpenFoodFacts =>
       (super.noSuchMethod(
             Invocation.getter(#productNotFoundOpenFoodFacts),
@@ -4081,6 +4103,237 @@ class MockAppLocalizations extends _i1.Mock implements _i2.AppLocalizations {
             returnValue: _i3.dummyValue<String>(
               this,
               Invocation.getter(#viewDocumentation),
+            ),
+          )
+          as String);
+
+  @override
+  String get healthSync =>
+      (super.noSuchMethod(
+            Invocation.getter(#healthSync),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#healthSync),
+            ),
+          )
+          as String);
+
+  @override
+  String get healthSyncDescription =>
+      (super.noSuchMethod(
+            Invocation.getter(#healthSyncDescription),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#healthSyncDescription),
+            ),
+          )
+          as String);
+
+  @override
+  String get health =>
+      (super.noSuchMethod(
+            Invocation.getter(#health),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#health),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncTypes =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncTypes),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncTypes),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncNow =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncNow),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncNow),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncing =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncing),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncing),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionPull =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionPull),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionPull),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionPush =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionPush),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionPush),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionBidirectional =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionBidirectional),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionBidirectional),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncTypeOff =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncTypeOff),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncTypeOff),
+            ),
+          )
+          as String);
+
+  @override
+  String get healthSyncBodyWeight =>
+      (super.noSuchMethod(
+            Invocation.getter(#healthSyncBodyWeight),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#healthSyncBodyWeight),
+            ),
+          )
+          as String);
+
+  @override
+  String get healthSyncBodyFat =>
+      (super.noSuchMethod(
+            Invocation.getter(#healthSyncBodyFat),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#healthSyncBodyFat),
+            ),
+          )
+          as String);
+
+  @override
+  String get healthSyncWaist =>
+      (super.noSuchMethod(
+            Invocation.getter(#healthSyncWaist),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#healthSyncWaist),
+            ),
+          )
+          as String);
+
+  @override
+  String get healthSyncLeanMass =>
+      (super.noSuchMethod(
+            Invocation.getter(#healthSyncLeanMass),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#healthSyncLeanMass),
+            ),
+          )
+          as String);
+
+  @override
+  String get healthSyncWorkouts =>
+      (super.noSuchMethod(
+            Invocation.getter(#healthSyncWorkouts),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#healthSyncWorkouts),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionPullLabel =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionPullLabel),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionPullLabel),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionPullSubtitle =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionPullSubtitle),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionPullSubtitle),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionPushLabel =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionPushLabel),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionPushLabel),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionPushSubtitle =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionPushSubtitle),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionPushSubtitle),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionBidirectionalLabel =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionBidirectionalLabel),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionBidirectionalLabel),
+            ),
+          )
+          as String);
+
+  @override
+  String get syncDirectionBidirectionalSubtitle =>
+      (super.noSuchMethod(
+            Invocation.getter(#syncDirectionBidirectionalSubtitle),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#syncDirectionBidirectionalSubtitle),
             ),
           )
           as String);
@@ -4378,6 +4631,50 @@ class MockAppLocalizations extends _i1.Mock implements _i2.AppLocalizations {
             returnValue: _i3.dummyValue<String>(
               this,
               Invocation.method(#filterNutriscoreOrBetter, [grade]),
+            ),
+          )
+          as String);
+
+  @override
+  String healthSyncSuccess(int? count) =>
+      (super.noSuchMethod(
+            Invocation.method(#healthSyncSuccess, [count]),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.method(#healthSyncSuccess, [count]),
+            ),
+          )
+          as String);
+
+  @override
+  String syncCount(int? count) =>
+      (super.noSuchMethod(
+            Invocation.method(#syncCount, [count]),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.method(#syncCount, [count]),
+            ),
+          )
+          as String);
+
+  @override
+  String syncedCount(int? count) =>
+      (super.noSuchMethod(
+            Invocation.method(#syncedCount, [count]),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.method(#syncedCount, [count]),
+            ),
+          )
+          as String);
+
+  @override
+  String syncDirectionTitle(String? type) =>
+      (super.noSuchMethod(
+            Invocation.method(#syncDirectionTitle, [type]),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.method(#syncDirectionTitle, [type]),
             ),
           )
           as String);

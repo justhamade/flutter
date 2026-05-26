@@ -45,73 +45,89 @@ import 'package:wger/providers/routines.dart' as _i23;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
-class _FakeWgerBaseProvider_0 extends _i1.SmartFake implements _i2.WgerBaseProvider {
+class _FakeWgerBaseProvider_0 extends _i1.SmartFake
+    implements _i2.WgerBaseProvider {
   _FakeWgerBaseProvider_0(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeExerciseDatabase_1 extends _i1.SmartFake implements _i3.ExerciseDatabase {
+class _FakeExerciseDatabase_1 extends _i1.SmartFake
+    implements _i3.ExerciseDatabase {
   _FakeExerciseDatabase_1(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
 class _FakeExercise_2 extends _i1.SmartFake implements _i4.Exercise {
-  _FakeExercise_2(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeExercise_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
-class _FakeExerciseCategory_3 extends _i1.SmartFake implements _i5.ExerciseCategory {
+class _FakeExerciseCategory_3 extends _i1.SmartFake
+    implements _i5.ExerciseCategory {
   _FakeExerciseCategory_3(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
 class _FakeEquipment_4 extends _i1.SmartFake implements _i6.Equipment {
-  _FakeEquipment_4(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeEquipment_4(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeMuscle_5 extends _i1.SmartFake implements _i7.Muscle {
-  _FakeMuscle_5(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeMuscle_5(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeLanguage_6 extends _i1.SmartFake implements _i8.Language {
-  _FakeLanguage_6(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeLanguage_6(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeWeightUnit_7 extends _i1.SmartFake implements _i9.WeightUnit {
-  _FakeWeightUnit_7(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeWeightUnit_7(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
-class _FakeRepetitionUnit_8 extends _i1.SmartFake implements _i10.RepetitionUnit {
+class _FakeRepetitionUnit_8 extends _i1.SmartFake
+    implements _i10.RepetitionUnit {
   _FakeRepetitionUnit_8(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
 class _FakeRoutine_9 extends _i1.SmartFake implements _i11.Routine {
-  _FakeRoutine_9(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeRoutine_9(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeDay_10 extends _i1.SmartFake implements _i12.Day {
-  _FakeDay_10(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeDay_10(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeSlot_11 extends _i1.SmartFake implements _i13.Slot {
-  _FakeSlot_11(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeSlot_11(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeSlotEntry_12 extends _i1.SmartFake implements _i14.SlotEntry {
-  _FakeSlotEntry_12(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeSlotEntry_12(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeBaseConfig_13 extends _i1.SmartFake implements _i15.BaseConfig {
-  _FakeBaseConfig_13(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeBaseConfig_13(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
-class _FakeWorkoutSession_14 extends _i1.SmartFake implements _i16.WorkoutSession {
+class _FakeWorkoutSession_14 extends _i1.SmartFake
+    implements _i16.WorkoutSession {
   _FakeWorkoutSession_14(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
 class _FakeLog_15 extends _i1.SmartFake implements _i17.Log {
-  _FakeLog_15(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeLog_15(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [ExercisesProvider].
@@ -213,10 +229,11 @@ class MockExercisesProvider extends _i1.Mock implements _i18.ExercisesProvider {
   );
 
   @override
-  set filteredExercises(List<_i4.Exercise>? newFilteredExercises) => super.noSuchMethod(
-    Invocation.setter(#filteredExercises, newFilteredExercises),
-    returnValueForMissingStub: null,
-  );
+  set filteredExercises(List<_i4.Exercise>? newFilteredExercises) =>
+      super.noSuchMethod(
+        Invocation.setter(#filteredExercises, newFilteredExercises),
+        returnValueForMissingStub: null,
+      );
 
   @override
   set languages(List<_i8.Language>? languages) => super.noSuchMethod(
@@ -226,7 +243,8 @@ class MockExercisesProvider extends _i1.Mock implements _i18.ExercisesProvider {
 
   @override
   bool get hasListeners =>
-      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false) as bool);
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
 
   @override
   _i19.Future<void> setFilters(_i18.Filters? newFilters) =>
@@ -639,14 +657,16 @@ class MockRoutinesProvider extends _i1.Mock implements _i23.RoutinesProvider {
   );
 
   @override
-  set repetitionUnits(List<_i10.RepetitionUnit>? repetitionUnits) => super.noSuchMethod(
-    Invocation.setter(#repetitionUnits, repetitionUnits),
-    returnValueForMissingStub: null,
-  );
+  set repetitionUnits(List<_i10.RepetitionUnit>? repetitionUnits) =>
+      super.noSuchMethod(
+        Invocation.setter(#repetitionUnits, repetitionUnits),
+        returnValueForMissingStub: null,
+      );
 
   @override
   bool get hasListeners =>
-      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false) as bool);
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
 
   @override
   void clear() => super.noSuchMethod(

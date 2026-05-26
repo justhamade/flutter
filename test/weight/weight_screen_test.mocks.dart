@@ -38,46 +38,55 @@ import 'package:wger/providers/user.dart' as _i13;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
-class _FakeWgerBaseProvider_0 extends _i1.SmartFake implements _i2.WgerBaseProvider {
+class _FakeWgerBaseProvider_0 extends _i1.SmartFake
+    implements _i2.WgerBaseProvider {
   _FakeWgerBaseProvider_0(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
 class _FakeWeightEntry_1 extends _i1.SmartFake implements _i3.WeightEntry {
-  _FakeWeightEntry_1(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeWeightEntry_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
-class _FakeSharedPreferencesAsync_2 extends _i1.SmartFake implements _i4.SharedPreferencesAsync {
+class _FakeSharedPreferencesAsync_2 extends _i1.SmartFake
+    implements _i4.SharedPreferencesAsync {
   _FakeSharedPreferencesAsync_2(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeIngredientDatabase_3 extends _i1.SmartFake implements _i5.IngredientDatabase {
+class _FakeIngredientDatabase_3 extends _i1.SmartFake
+    implements _i5.IngredientDatabase {
   _FakeIngredientDatabase_3(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeNutritionalPlan_4 extends _i1.SmartFake implements _i6.NutritionalPlan {
+class _FakeNutritionalPlan_4 extends _i1.SmartFake
+    implements _i6.NutritionalPlan {
   _FakeNutritionalPlan_4(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
 class _FakeMeal_5 extends _i1.SmartFake implements _i7.Meal {
-  _FakeMeal_5(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeMeal_5(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeMealItem_6 extends _i1.SmartFake implements _i8.MealItem {
-  _FakeMealItem_6(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeMealItem_6(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeIngredient_7 extends _i1.SmartFake implements _i9.Ingredient {
-  _FakeIngredient_7(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+  _FakeIngredient_7(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [BodyWeightProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockBodyWeightProvider extends _i1.Mock implements _i10.BodyWeightProvider {
+class MockBodyWeightProvider extends _i1.Mock
+    implements _i10.BodyWeightProvider {
   MockBodyWeightProvider() {
     _i1.throwOnMissingStub(this);
   }
@@ -109,7 +118,8 @@ class MockBodyWeightProvider extends _i1.Mock implements _i10.BodyWeightProvider
 
   @override
   bool get hasListeners =>
-      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false) as bool);
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
 
   @override
   void clear() => super.noSuchMethod(
@@ -130,7 +140,8 @@ class MockBodyWeightProvider extends _i1.Mock implements _i10.BodyWeightProvider
 
   @override
   _i3.WeightEntry? findByDate(DateTime? date) =>
-      (super.noSuchMethod(Invocation.method(#findByDate, [date])) as _i3.WeightEntry?);
+      (super.noSuchMethod(Invocation.method(#findByDate, [date]))
+          as _i3.WeightEntry?);
 
   @override
   _i11.Future<List<_i3.WeightEntry>> fetchAndSetEntries() =>
@@ -256,6 +267,12 @@ class MockUserProvider extends _i1.Mock implements _i13.UserProvider {
   );
 
   @override
+  set userLocale(_i12.Locale? value) => super.noSuchMethod(
+    Invocation.setter(#userLocale, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
   set prefs(_i4.SharedPreferencesAsync? value) => super.noSuchMethod(
     Invocation.setter(#prefs, value),
     returnValueForMissingStub: null,
@@ -269,7 +286,8 @@ class MockUserProvider extends _i1.Mock implements _i13.UserProvider {
 
   @override
   bool get hasListeners =>
-      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false) as bool);
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
 
   @override
   void clear() => super.noSuchMethod(
@@ -311,6 +329,15 @@ class MockUserProvider extends _i1.Mock implements _i13.UserProvider {
     Invocation.method(#setThemeMode, [mode]),
     returnValueForMissingStub: null,
   );
+
+  @override
+  _i11.Future<void> setUserLocale(_i12.Locale? locale) =>
+      (super.noSuchMethod(
+            Invocation.method(#setUserLocale, [locale]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
 
   @override
   _i11.Future<void> fetchAndSetProfile() =>
@@ -367,7 +394,8 @@ class MockUserProvider extends _i1.Mock implements _i13.UserProvider {
 /// A class which mocks [NutritionPlansProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockNutritionPlansProvider extends _i1.Mock implements _i16.NutritionPlansProvider {
+class MockNutritionPlansProvider extends _i1.Mock
+    implements _i16.NutritionPlansProvider {
   MockNutritionPlansProvider() {
     _i1.throwOnMissingStub(this);
   }
@@ -424,7 +452,8 @@ class MockNutritionPlansProvider extends _i1.Mock implements _i16.NutritionPlans
 
   @override
   bool get hasListeners =>
-      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false) as bool);
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
 
   @override
   void clear() => super.noSuchMethod(

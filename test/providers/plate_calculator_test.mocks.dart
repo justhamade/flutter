@@ -27,7 +27,8 @@ import 'package:shared_preferences/src/shared_preferences_async.dart' as _i2;
 ///
 /// See the documentation for Mockito's code generation for more information.
 // ignore: must_be_immutable
-class MockSharedPreferencesAsync extends _i1.Mock implements _i2.SharedPreferencesAsync {
+class MockSharedPreferencesAsync extends _i1.Mock
+    implements _i2.SharedPreferencesAsync {
   MockSharedPreferencesAsync() {
     _i1.throwOnMissingStub(this);
   }
