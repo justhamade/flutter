@@ -19,7 +19,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:wger/l10n/generated/app_localizations.dart';
 import 'package:wger/providers/body_weight.dart';
 import 'package:wger/providers/health_sync.dart';
@@ -160,6 +159,7 @@ class _MissingPermissionsBanner extends ConsumerStatefulWidget {
 class _MissingPermissionsBannerState
     extends ConsumerState<_MissingPermissionsBanner> {
   List<SyncDataType>? _missing;
+  bool _isRequesting = false;
 
   @override
   void initState() {
@@ -175,15 +175,48 @@ class _MissingPermissionsBannerState
     }
   }
 
+  Future<void> _requestMissing() async {
+    setState(() => _isRequesting = true);
+    try {
+      final notifier = ref.read(healthSyncProvider.notifier);
+      // Request authorization for only the missing types
+      // iOS will show a new prompt for types not previously requested
+      final count = await notifier.requestMissingPermissions(
+        isMetric: provider.Provider.of<UserProvider>(context, listen: false)
+                .profile
+                ?.isMetric ??
+            true,
+      );
+      if (count > 0) {
+        await provider.Provider.of<BodyWeightProvider>(context, listen: false)
+            .fetchAndSetEntries();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Synced $count entries')),
+          );
+        }
+      }
+      // Re-check permissions
+      await _checkPermissions();
+    } catch (_) {
+      // Best effort
+    }
+    if (mounted) setState(() => _isRequesting = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_missing == null || _missing!.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final errorColor = theme.colorScheme.errorContainer;
+    final onError = theme.colorScheme.onErrorContainer;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer,
+        color: errorColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -191,39 +224,45 @@ class _MissingPermissionsBannerState
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.onErrorContainer),
+              Icon(Icons.warning_amber_rounded, size: 18, color: onError),
               const SizedBox(width: 8),
               Text(
                 'Missing Health Permissions',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                    ),
+                style: theme.textTheme.labelLarge?.copyWith(color: onError),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            '${_missing!.length} data type(s) need permission. '
-            'Enable them in Settings > Health > Data Access > wger.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onErrorContainer,
-                ),
+            '${_missing!.length} data type(s) need permission.',
+            style: theme.textTheme.bodySmall?.copyWith(color: onError),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tap "Request Permissions" to re-show the Health prompt.\n'
+            'Or go to: Settings → Health → Data Access → wger',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: onError.withValues(alpha: 0.8),
+              fontSize: 11,
+            ),
           ),
           const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () async {
-                final url = Uri.parse('app-settings:');
-                if (await canLaunchUrl(url)) {
-                  await launchUrl(url);
-                }
-              },
-              icon: const Icon(Icons.settings, size: 16),
-              label: const Text('Open Settings'),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isRequesting ? null : _requestMissing,
+                  icon: _isRequesting
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh, size: 16),
+                  label: Text(_isRequesting ? 'Requesting...' : 'Request Permissions'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

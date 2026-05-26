@@ -209,7 +209,11 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
     await PreferenceHelper.instance.setHealthSyncEnabled(true);
     state = state.copyWith(isEnabled: true);
 
-    return syncAll(isMetric: isMetric);
+    if (!state.isSyncing) {
+      return syncAll(isMetric: isMetric);
+    }
+    _logger.info('Sync already in progress, skipping initial sync');
+    return 0;
   }
 
   /// Disable health sync: clear all preferences.
@@ -836,16 +840,37 @@ case SyncDataType.bodyFat:
 
   /// Open this app's Health permissions in iOS Settings.
   ///
-  /// The user must manually toggle on the data types they want to sync.
-  /// Returns false if the URL couldn't be opened.
-  Future<bool> openHealthSettings() async {
-    if (!Platform.isIOS) return false;
-    try {
-      // Uses Flutter's url_launcher to open Settings
-      return true;
-    } catch (e) {
-      return false;
+  /// Attempts to re-prompt for missing types by requesting authorization
+  /// for only the types that were denied. On iOS, this triggers a new
+  /// system Health prompt if the types weren't in the original request.
+  /// Returns the number of newly granted types.
+  Future<int> requestMissingPermissions({bool isMetric = true}) async {
+    if (!Platform.isIOS) return 0;
+    await _health.configure();
+
+    final missing = await getMissingPermissions();
+    if (missing.isEmpty) return 0;
+
+    // Request authorization for ONLY the missing types (not all types)
+    // iOS will show a new prompt for types that weren't in the original request
+    final missingTypes = missing.map(_healthTypeFor).toList();
+    final missingPerms = List.filled(missingTypes.length, HealthDataAccess.READ);
+
+    _logger.info('Requesting authorization for ${missing.length} missing types');
+
+    final authorized = await _health.requestAuthorization(
+      missingTypes,
+      permissions: missingPerms,
+    );
+
+    if (!authorized) {
+      _logger.warning('Re-prompt for missing types was dismissed or failed');
+      return 0;
     }
+
+    // Prompt was shown — the user may have granted some types
+    // Run sync to pick up any newly available data
+    return syncAll(isMetric: isMetric);
   }
 
   // ───────── Additional Health Metrics ─────────
