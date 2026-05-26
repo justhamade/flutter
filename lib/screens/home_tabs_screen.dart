@@ -155,7 +155,7 @@ class _HomeTabsScreenState extends ConsumerState<HomeTabsScreen>
     final isMetric = userProviderForSync.profile?.isMetric ?? true;
     final healthNotifier = ref.read(healthSyncProvider.notifier);
     healthNotifier
-        .syncOnAppOpen(existingEntries: weightProviderForSync.items, isMetric: isMetric)
+        .syncAll(isMetric: isMetric)
         .then((syncCount) {
       if (syncCount > 0) {
         weightProviderForSync.fetchAndSetEntries();
