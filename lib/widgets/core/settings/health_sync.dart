@@ -19,6 +19,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wger/l10n/generated/app_localizations.dart';
 import 'package:wger/providers/body_weight.dart';
 import 'package:wger/providers/health_sync.dart';
@@ -93,6 +94,9 @@ class _HealthSyncSettingsTileState extends ConsumerState<HealthSyncSettingsTile>
 
         // Per-type toggles (only visible when sync is enabled)
         if (syncState.isEnabled) ...[
+          // Show permissions warning if types are missing
+          _MissingPermissionsBanner(),
+
           const Divider(height: 1, indent: 16, endIndent: 16),
           Padding(
             padding: const EdgeInsets.only(left: 16, top: 8, bottom: 4),
@@ -143,6 +147,86 @@ class _HealthSyncSettingsTileState extends ConsumerState<HealthSyncSettingsTile>
           ),
         ],
       ],
+    );
+  }
+}
+
+class _MissingPermissionsBanner extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_MissingPermissionsBanner> createState() =>
+      _MissingPermissionsBannerState();
+}
+
+class _MissingPermissionsBannerState
+    extends ConsumerState<_MissingPermissionsBanner> {
+  List<SyncDataType>? _missing;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    final notifier = ref.read(healthSyncProvider.notifier);
+    final missing = await notifier.getMissingPermissions();
+    if (mounted) {
+      setState(() => _missing = missing);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_missing == null || _missing!.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onErrorContainer),
+              const SizedBox(width: 8),
+              Text(
+                'Missing Health Permissions',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${_missing!.length} data type(s) need permission. '
+            'Enable them in Settings > Health > Data Access > wger.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                final url = Uri.parse('app-settings:');
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                }
+              },
+              icon: const Icon(Icons.settings, size: 16),
+              label: const Text('Open Settings'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

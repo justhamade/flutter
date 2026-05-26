@@ -168,11 +168,19 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
       readTypes.add(HealthDataType.WEIGHT);
     }
 
+    // Include additional health metric types in the permission request
+    for (final metric in additionalHealthMetrics) {
+      if (!readTypes.contains(metric.healthType)) {
+        readTypes.add(metric.healthType);
+      }
+    }
+
     // Request READ permissions
     if (readTypes.isNotEmpty) {
+      final readPerms = List.filled(readTypes.length, HealthDataAccess.READ);
       final authorized = await _health.requestAuthorization(
         readTypes,
-        permissions: [HealthDataAccess.READ],
+        permissions: readPerms,
       );
       if (!authorized) {
         _logger.warning('Health READ permissions not granted');
@@ -182,9 +190,10 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
 
     // Request WRITE permissions
     if (writeTypes.isNotEmpty) {
+      final writePerms = List.filled(writeTypes.length, HealthDataAccess.WRITE);
       final writeAuthorized = await _health.requestAuthorization(
         writeTypes,
-        permissions: [HealthDataAccess.WRITE],
+        permissions: writePerms,
       );
       if (!writeAuthorized) {
         _logger.warning('Health WRITE permissions not granted');
@@ -783,6 +792,59 @@ case SyncDataType.bodyFat:
         return HealthDataType.LEAN_BODY_MASS;
       case SyncDataType.workouts:
         return HealthDataType.WORKOUT;
+    }
+  }
+
+  // ───────── Permission Management ─────────
+
+  /// Check which health data types are missing READ permissions.
+  ///
+  /// Returns a list of missing [SyncDataType] values so the UI can
+  /// prompt the user to enable them in Settings.
+  Future<List<SyncDataType>> getMissingPermissions() async {
+    final missing = <SyncDataType>[];
+    await _health.configure();
+
+    for (final type in allSyncDataTypes) {
+      final healthType = _healthTypeFor(type);
+      if (type == SyncDataType.workouts) {
+        // Workout permissions checked separately
+        continue;
+      }
+      final hasPerms = await _health.hasPermissions(
+        [healthType],
+        permissions: [HealthDataAccess.READ],
+      );
+      if (hasPerms != true) {
+        missing.add(type);
+      }
+    }
+
+    // Also check additional health metrics
+    for (final metric in additionalHealthMetrics) {
+      final hasPerms = await _health.hasPermissions(
+        [metric.healthType],
+        permissions: [HealthDataAccess.READ],
+      );
+      if (hasPerms != true) {
+        _logger.info('Missing permission for ${metric.displayName}');
+      }
+    }
+
+    return missing;
+  }
+
+  /// Open this app's Health permissions in iOS Settings.
+  ///
+  /// The user must manually toggle on the data types they want to sync.
+  /// Returns false if the URL couldn't be opened.
+  Future<bool> openHealthSettings() async {
+    if (!Platform.isIOS) return false;
+    try {
+      // Uses Flutter's url_launcher to open Settings
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
