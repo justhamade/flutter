@@ -18,6 +18,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wger/providers/health_sync.dart';
+import 'package:wger/providers/health_sync_config.dart';
 
 /// Mirrors the conversion logic in HealthSyncNotifier.syncOnAppOpen
 double _convertWeight(double weightKg, {required bool isMetric}) {
@@ -30,7 +31,6 @@ void main() {
       // 1 kg = 2.20462 lb
       expect(kgToLb, closeTo(2.20462, 0.00001));
     });
-
   });
 
   group('Weight unit conversion', () {
@@ -66,7 +66,9 @@ void main() {
       const state = HealthSyncState();
       expect(state.isEnabled, false);
       expect(state.isSyncing, false);
+      expect(state.pushInProgress, false);
       expect(state.lastSyncCount, 0);
+      expect(state.typeStates, isEmpty);
     });
 
     test('copyWith updates individual fields', () {
@@ -75,6 +77,107 @@ void main() {
       expect(updated.isEnabled, true);
       expect(updated.isSyncing, false);
       expect(updated.lastSyncCount, 5);
+    });
+
+    test('copyWith updates pushInProgress and typeStates', () {
+      const state = HealthSyncState();
+      final typeStates = {SyncDataType.weight: const SyncTypeState(enabled: true)};
+      final updated = state.copyWith(pushInProgress: true, typeStates: typeStates);
+      expect(updated.pushInProgress, true);
+      expect(updated.typeStates, containsPair(SyncDataType.weight, isA<SyncTypeState>()));
+    });
+  });
+
+  group('SyncDataType', () {
+    test('allSyncDataTypes contains all types', () {
+      expect(allSyncDataTypes.length, 5);
+      expect(allSyncDataTypes, containsAll([
+        SyncDataType.weight,
+        SyncDataType.bodyFat,
+        SyncDataType.waist,
+        SyncDataType.leanMass,
+        SyncDataType.workouts,
+      ]));
+    });
+
+    test('syncDataTypeDisplayName returns human-readable names', () {
+      expect(syncDataTypeDisplayName(SyncDataType.weight), 'Body Weight');
+      expect(syncDataTypeDisplayName(SyncDataType.bodyFat), 'Body Fat %');
+      expect(syncDataTypeDisplayName(SyncDataType.waist), 'Waist Circumference');
+      expect(syncDataTypeDisplayName(SyncDataType.leanMass), 'Lean Body Mass');
+      expect(syncDataTypeDisplayName(SyncDataType.workouts), 'Workouts');
+    });
+
+    test('syncDataTypeToPrefKey returns valid keys', () {
+      expect(syncDataTypeToPrefKey(SyncDataType.weight), 'weight');
+      expect(syncDataTypeToPrefKey(SyncDataType.bodyFat), 'bodyFat');
+      expect(syncDataTypeToPrefKey(SyncDataType.workouts), 'workouts');
+    });
+
+    test('syncDataTypeToHealthType returns valid HealthDataType names', () {
+      expect(syncDataTypeToHealthType(SyncDataType.weight), 'WEIGHT');
+      expect(syncDataTypeToHealthType(SyncDataType.bodyFat), 'BODY_FAT_PERCENTAGE');
+      expect(syncDataTypeToHealthType(SyncDataType.workouts), 'WORKOUT');
+    });
+  });
+
+  group('SyncDirection', () {
+    test('syncDirectionFromString maps correctly', () {
+      expect(syncDirectionFromString('pull'), SyncDirection.pull);
+      expect(syncDirectionFromString('push'), SyncDirection.push);
+      expect(syncDirectionFromString('bidirectional'), SyncDirection.bidirectional);
+      expect(syncDirectionFromString('unknown'), SyncDirection.pull);
+    });
+
+    test('syncDirectionToString maps correctly', () {
+      expect(syncDirectionToString(SyncDirection.pull), 'pull');
+      expect(syncDirectionToString(SyncDirection.push), 'push');
+      expect(syncDirectionToString(SyncDirection.bidirectional), 'bidirectional');
+    });
+  });
+
+  group('SyncTypeState', () {
+    test('default state has pull direction and no timestamp', () {
+      const state = SyncTypeState();
+      expect(state.enabled, true);
+      expect(state.direction, SyncDirection.pull);
+      expect(state.lastSyncTimestamp, isNull);
+      expect(state.lastSyncCount, 0);
+    });
+
+    test('copyWith updates fields', () {
+      const state = SyncTypeState();
+      final updated = state.copyWith(
+        enabled: false,
+        direction: SyncDirection.bidirectional,
+        lastSyncCount: 10,
+      );
+      expect(updated.enabled, false);
+      expect(updated.direction, SyncDirection.bidirectional);
+      expect(updated.lastSyncCount, 10);
+    });
+  });
+
+  group('Measurement category mapping', () {
+    test('bodyFat maps to category 13', () {
+      expect(syncDataTypeToMeasurementCategory(SyncDataType.bodyFat), 13);
+    });
+
+    test('waist maps to category 2', () {
+      expect(syncDataTypeToMeasurementCategory(SyncDataType.waist), 2);
+    });
+
+    test('leanMass has no standard category', () {
+      expect(syncDataTypeToMeasurementCategory(SyncDataType.leanMass), isNull);
+    });
+
+    test('bodyCompDataTypes contains correct types', () {
+      expect(bodyCompDataTypes, containsAll([
+        SyncDataType.bodyFat,
+        SyncDataType.waist,
+        SyncDataType.leanMass,
+      ]));
+      expect(bodyCompDataTypes.length, 3);
     });
   });
 }

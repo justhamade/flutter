@@ -24,35 +24,70 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wger/helpers/shared_preferences.dart';
 import 'package:wger/models/body_weight/weight_entry.dart';
 import 'package:wger/providers/base_provider.dart';
+import 'package:wger/providers/health_sync_config.dart';
 import 'package:wger/providers/wger_base_riverpod.dart';
 
 part 'health_sync.g.dart';
 
+/// Overall state of the health sync system.
+///
+/// Holds both the master enabled toggle and per-data-type states
+/// so the UI can show granular status for each sync type.
 class HealthSyncState {
   final bool isEnabled;
   final bool isSyncing;
+  final bool pushInProgress;
   final int lastSyncCount;
+
+  /// Per-data-type state map, keyed by [SyncDataType].
+  /// Built from persisted prefs on startup.
+  final Map<SyncDataType, SyncTypeState> typeStates;
 
   const HealthSyncState({
     this.isEnabled = false,
     this.isSyncing = false,
+    this.pushInProgress = false,
     this.lastSyncCount = 0,
+    this.typeStates = const {},
   });
 
   HealthSyncState copyWith({
     bool? isEnabled,
     bool? isSyncing,
+    bool? pushInProgress,
     int? lastSyncCount,
+    Map<SyncDataType, SyncTypeState>? typeStates,
   }) {
     return HealthSyncState(
       isEnabled: isEnabled ?? this.isEnabled,
       isSyncing: isSyncing ?? this.isSyncing,
+      pushInProgress: pushInProgress ?? this.pushInProgress,
       lastSyncCount: lastSyncCount ?? this.lastSyncCount,
+      typeStates: typeStates ?? this.typeStates,
     );
   }
 }
 
 const double kgToLb = 2.20462;
+
+/// All health data types we request permissions for.
+///
+/// Order follows Apple's recommended grouping — weight/body comp first,
+/// then workout/activity data.
+List<HealthDataType> get _allRequestedDataTypes => [
+      HealthDataType.WEIGHT,
+      HealthDataType.BODY_FAT_PERCENTAGE,
+      HealthDataType.WAIST_CIRCUMFERENCE,
+      HealthDataType.LEAN_BODY_MASS,
+      HealthDataType.WORKOUT,
+    ];
+
+/// Data types we want WRITE access to (push direction).
+List<HealthDataType> get _allWriteDataTypes => [
+      HealthDataType.WEIGHT,
+      HealthDataType.BODY_FAT_PERCENTAGE,
+      HealthDataType.WAIST_CIRCUMFERENCE,
+    ];
 
 @Riverpod(keepAlive: true)
 class HealthSyncNotifier extends _$HealthSyncNotifier {
@@ -61,6 +96,7 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
   late final WgerBaseProvider _baseProvider;
 
   static const _weightEntryUrl = 'weightentry';
+  static const _measurementUrl = 'measurement';
 
   @override
   HealthSyncState build() {
@@ -76,11 +112,16 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
   Future<void> _loadPersistedState() async {
     final enabled = await PreferenceHelper.instance.getHealthSyncEnabled();
     if (enabled) {
-      state = state.copyWith(isEnabled: true);
+      // Load per-type states
+      final typeStates = <SyncDataType, SyncTypeState>{};
+      for (final type in allSyncDataTypes) {
+        typeStates[type] = await loadTypeState(type);
+      }
+      state = state.copyWith(isEnabled: true, typeStates: typeStates);
     }
   }
 
-  /// Check if the health platform is available on this device
+  /// Check if the health platform is available on this device.
   Future<bool> isAvailable() async {
     if (Platform.isAndroid) {
       await _health.configure();
@@ -91,21 +132,60 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
     return Platform.isIOS;
   }
 
-  /// Enable health sync: request permissions, save preference, trigger initial sync.
-  /// If [isMetric] is false, converts kg values from the health platform to lb before POSTing.
+  // ───────── Enable / Disable ─────────
+
+  /// Enable health sync: request permissions for all types,
+  /// save preference, trigger initial sync.
   Future<int> enableSync({bool isMetric = true}) async {
     _logger.info('Enabling health sync');
 
     await _health.configure();
 
-    final authorized = await _health.requestAuthorization(
-      [HealthDataType.WEIGHT],
-      permissions: [HealthDataAccess.READ],
-    );
+    // Determine which READ types are needed based on enabled types + direction
+    final readTypes = <HealthDataType>[];
+    final writeTypes = <HealthDataType>[];
+    for (final type in allSyncDataTypes) {
+      final typeState = state.typeStates[type] ?? const SyncTypeState();
+      if (!typeState.enabled) continue;
 
-    if (!authorized) {
-      _logger.warning('Health permissions not granted');
-      return 0;
+      switch (typeState.direction) {
+        case SyncDirection.pull:
+          readTypes.add(_healthTypeFor(type));
+        case SyncDirection.push:
+          writeTypes.add(_healthTypeFor(type));
+        case SyncDirection.bidirectional:
+          readTypes.add(_healthTypeFor(type));
+          writeTypes.add(_healthTypeFor(type));
+      }
+    }
+
+    // Always include weight READ (legacy default)
+    if (!readTypes.contains(HealthDataType.WEIGHT)) {
+      readTypes.add(HealthDataType.WEIGHT);
+    }
+
+    // Request READ permissions
+    if (readTypes.isNotEmpty) {
+      final authorized = await _health.requestAuthorization(
+        readTypes,
+        permissions: [HealthDataAccess.READ],
+      );
+      if (!authorized) {
+        _logger.warning('Health READ permissions not granted');
+        return 0;
+      }
+    }
+
+    // Request WRITE permissions
+    if (writeTypes.isNotEmpty) {
+      final writeAuthorized = await _health.requestAuthorization(
+        writeTypes,
+        permissions: [HealthDataAccess.WRITE],
+      );
+      if (!writeAuthorized) {
+        _logger.warning('Health WRITE permissions not granted');
+        // Continue anyway — partial permissions are OK
+      }
     }
 
     // Request access to historical data (older than 30 days) on Android
@@ -116,140 +196,310 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
     await PreferenceHelper.instance.setHealthSyncEnabled(true);
     state = state.copyWith(isEnabled: true);
 
-    return syncOnAppOpen(isMetric: isMetric);
+    return syncAll(isMetric: isMetric);
   }
 
-  /// Disable health sync: clear preferences
+  /// Disable health sync: clear all preferences.
   Future<void> disableSync() async {
     _logger.info('Disabling health sync');
     await PreferenceHelper.instance.clearHealthSyncPreferences();
     state = const HealthSyncState();
   }
 
-  /// Main sync method: read weight data from health platform, post new entries to backend.
-  /// If [isMetric] is false, converts kg values from the health platform to lb before POSTing.
-  Future<int> syncOnAppOpen({List<WeightEntry>? existingEntries, bool isMetric = true}) async {
-    final prefs = PreferenceHelper.instance;
-    final enabled = await prefs.getHealthSyncEnabled();
-    if (!enabled) {
-      return 0;
-    }
+  // ───────── Orchestrator ─────────
 
-    if (state.isSyncing) {
-      return 0;
-    }
+  /// Sync ALL enabled data types in the configured direction.
+  ///
+  /// Calls type-specific sync methods, aggregates results.
+  /// If [isMetric] is false, converts kg values to lb.
+  Future<int> syncAll({bool isMetric = true}) async {
+    if (state.isSyncing) return 0;
     state = state.copyWith(isEnabled: true, isSyncing: true);
 
+    int totalCount = 0;
     try {
-      await _health.configure();
+      for (final type in allSyncDataTypes) {
+        final typeState = state.typeStates[type] ?? const SyncTypeState();
+        if (!typeState.enabled) continue;
 
-      // Ensure we have permission to read weight data
-      final hasPerms = await _health.hasPermissions(
-        [HealthDataType.WEIGHT],
-        permissions: [HealthDataAccess.READ],
-      );
-      if (hasPerms != true) {
-        final authorized = await _health.requestAuthorization(
-          [HealthDataType.WEIGHT],
-          permissions: [HealthDataAccess.READ],
-        );
-        if (!authorized) {
-          _logger.warning('Health permissions not granted during sync');
-          state = state.copyWith(isSyncing: false);
-          return 0;
+        switch (type) {
+          case SyncDataType.weight:
+            totalCount += await _syncWeightPull(isMetric: isMetric);
+            if (typeState.direction == SyncDirection.push ||
+                typeState.direction == SyncDirection.bidirectional) {
+              totalCount += await _syncWeightPush();
+            }
+          case SyncDataType.bodyFat:
+            totalCount += await _syncMeasurementPull(
+              SyncDataType.bodyFat,
+              HealthDataType.BODY_FAT_PERCENTAGE,
+              isMetric: false, // body fat % has no unit conversion
+            );
+          case SyncDataType.waist:
+            totalCount += await _syncMeasurementPull(
+              SyncDataType.waist,
+              HealthDataType.WAIST_CIRCUMFERENCE,
+              isMetric: isMetric,
+            );
+          case SyncDataType.leanMass:
+            totalCount += await _syncMeasurementPull(
+              SyncDataType.leanMass,
+              HealthDataType.LEAN_BODY_MASS,
+              isMetric: isMetric,
+            );
+          case SyncDataType.workouts:
+            // TODO: Implement workout sync in a follow-up module
+            _logger.info('Workout sync not yet implemented — skipping');
         }
       }
+    } catch (e) {
+      _logger.warning('Health sync orchestrator failed: $e');
+    }
 
-      // Determine the start time for the query
-      final lastSyncStr = await prefs.getLastHealthSyncTimestamp();
-      final DateTime startTime;
-      if (lastSyncStr != null) {
-        startTime = DateTime.parse(lastSyncStr);
-      } else {
-        // Pull all available history on first sync
-        startTime = DateTime(2000);
-      }
-      final endTime = DateTime.now();
+    state = state.copyWith(isSyncing: false, lastSyncCount: totalCount);
+    return totalCount;
+  }
 
-      _logger.info('Syncing weight data from $startTime to $endTime');
+  // ───────── Weight Pull (Apple Health → wger) ─────────
 
-      // Read weight data from health platform
-      List<HealthDataPoint> dataPoints = await _health.getHealthDataFromTypes(
+  Future<int> _syncWeightPull({List<WeightEntry>? existingEntries, bool isMetric = true}) async {
+    final prefs = PreferenceHelper.instance;
+    final lastSyncStr = await prefs.getLastHealthSyncTimestamp();
+    final startTime = lastSyncStr != null ? DateTime.parse(lastSyncStr) : DateTime(2000);
+    final endTime = DateTime.now();
+
+    _logger.info('Syncing weight data from $startTime to $endTime');
+
+    List<HealthDataPoint> dataPoints;
+    try {
+      dataPoints = await _health.getHealthDataFromTypes(
         types: [HealthDataType.WEIGHT],
         startTime: startTime,
         endTime: endTime,
       );
-      dataPoints = _health.removeDuplicates(dataPoints);
-
-      if (dataPoints.isEmpty) {
-        _logger.info('No new weight data from health platform');
-        state = state.copyWith(isSyncing: false, lastSyncCount: 0);
-        return 0;
-      }
-
-      _logger.info('Found ${dataPoints.length} weight data points');
-
-      // Build a Set of existing timestamps for O(1) dedup lookups
-      final existingTimestamps = existingEntries != null
-          ? {
-              for (final e in existingEntries)
-                DateTime(e.date.year, e.date.month, e.date.day, e.date.hour, e.date.minute),
-            }
-          : <DateTime>{};
-
-      int syncedCount = 0;
-      DateTime? latestSynced;
-
-      for (final point in dataPoints) {
-        try {
-          final value = (point.value as NumericHealthValue).numericValue;
-          final weightKg = value.toDouble();
-          final timestamp = point.dateFrom;
-
-          final weight = isMetric ? weightKg : weightKg * kgToLb;
-          final weightRounded = (weight * 100).roundToDouble() / 100;
-
-          // Skip if an entry with the same timestamp already exists locally
-          final normalizedTimestamp = DateTime(
-            timestamp.year,
-            timestamp.month,
-            timestamp.day,
-            timestamp.hour,
-            timestamp.minute,
-          );
-          if (existingTimestamps.contains(normalizedTimestamp)) {
-            _logger.fine('Skipping duplicate entry for $timestamp');
-            continue;
-          }
-
-          final entry = WeightEntry(weight: weightRounded, date: timestamp);
-          await _baseProvider.post(
-            entry.toJson(),
-            _baseProvider.makeUrl(_weightEntryUrl),
-          );
-
-          syncedCount++;
-          if (latestSynced == null || timestamp.isAfter(latestSynced)) {
-            latestSynced = timestamp;
-          }
-        } catch (e) {
-          _logger.warning('Failed to sync weight entry: $e');
-          // Best-effort: continue with next entry
-        }
-      }
-
-      // Update last sync timestamp to the latest successfully synced reading
-      if (latestSynced != null) {
-        await prefs.setLastHealthSyncTimestamp(latestSynced.toIso8601String());
-      }
-
-      _logger.info('Synced $syncedCount weight entries');
-      state = state.copyWith(isSyncing: false, lastSyncCount: syncedCount);
-      return syncedCount;
     } catch (e) {
-      _logger.warning('Health sync failed: $e');
-      state = state.copyWith(isSyncing: false, lastSyncCount: 0);
+      _logger.warning('Failed to read weight data from health platform: $e');
       return 0;
+    }
+    dataPoints = _health.removeDuplicates(dataPoints);
+
+    if (dataPoints.isEmpty) {
+      _logger.info('No new weight data from health platform');
+      return 0;
+    }
+
+    _logger.info('Found ${dataPoints.length} weight data points');
+
+    // Build dedup set from existing entries
+    final existingTimestamps = existingEntries != null
+        ? {
+            for (final e in existingEntries)
+              DateTime(e.date.year, e.date.month, e.date.day, e.date.hour, e.date.minute),
+          }
+        : <DateTime>{};
+
+    int syncedCount = 0;
+    DateTime? latestSynced;
+
+    for (final point in dataPoints) {
+      try {
+        final value = (point.value as NumericHealthValue).numericValue;
+        final weightKg = value.toDouble();
+        final timestamp = point.dateFrom;
+
+        final weight = isMetric ? weightKg : weightKg * kgToLb;
+        final weightRounded = (weight * 100).roundToDouble() / 100;
+
+        final normalizedTimestamp = DateTime(
+          timestamp.year,
+          timestamp.month,
+          timestamp.day,
+          timestamp.hour,
+          timestamp.minute,
+        );
+        if (existingTimestamps.contains(normalizedTimestamp)) {
+          _logger.fine('Skipping duplicate weight entry for $timestamp');
+          continue;
+        }
+
+        final entry = WeightEntry(weight: weightRounded, date: timestamp);
+        await _baseProvider.post(
+          entry.toJson(),
+          _baseProvider.makeUrl(_weightEntryUrl),
+        );
+
+        syncedCount++;
+        if (latestSynced == null || timestamp.isAfter(latestSynced)) {
+          latestSynced = timestamp;
+        }
+      } catch (e) {
+        _logger.warning('Failed to sync weight entry: $e');
+      }
+    }
+
+    if (latestSynced != null) {
+      await prefs.setLastHealthSyncTimestamp(latestSynced.toIso8601String());
+      // Also update per-type timestamp
+      await prefs.setTypeLastSyncTimestamp(
+        syncDataTypeToPrefKey(SyncDataType.weight),
+        latestSynced.toIso8601String(),
+      );
+    }
+
+    _logger.info('Synced $syncedCount weight entries');
+    // Update type state
+    _updateTypeState(SyncDataType.weight, syncedCount: syncedCount);
+    return syncedCount;
+  }
+
+  // ───────── Weight Push (wger → Apple Health) ─────────
+
+  Future<int> _syncWeightPush() async {
+    // TODO: Read existing wger weight entries and write to Apple Health
+    // Requires HealthDataType.WEIGHT with WRITE permission.
+    _logger.info('Weight push not yet implemented');
+    return 0;
+  }
+
+  // ───────── Body Measurement Pull (Apple Health → wger) ─────────
+
+  Future<int> _syncMeasurementPull(
+    SyncDataType syncType,
+    HealthDataType healthType, {
+    bool isMetric = true,
+  }) async {
+    final prefs = PreferenceHelper.instance;
+    final typeKey = syncDataTypeToPrefKey(syncType);
+    final lastSyncStr = await prefs.getTypeLastSyncTimestamp(typeKey);
+    final startTime = lastSyncStr != null ? DateTime.parse(lastSyncStr) : DateTime(2000);
+    final endTime = DateTime.now();
+
+    _logger.info('Syncing ${syncDataTypeDisplayName(syncType)} from $startTime to $endTime');
+
+    // Check READ permission
+    final hasPerms = await _health.hasPermissions(
+      [healthType],
+      permissions: [HealthDataAccess.READ],
+    );
+    if (hasPerms != true) {
+      _logger.warning('No READ permission for $healthType — skipping');
+      return 0;
+    }
+
+    List<HealthDataPoint> dataPoints;
+    try {
+      dataPoints = await _health.getHealthDataFromTypes(
+        types: [healthType],
+        startTime: startTime,
+        endTime: endTime,
+      );
+    } catch (e) {
+      _logger.warning('Failed to read $healthType: $e');
+      return 0;
+    }
+    dataPoints = _health.removeDuplicates(dataPoints);
+
+    if (dataPoints.isEmpty) {
+      _logger.info('No new ${syncDataTypeDisplayName(syncType)} data from health platform');
+      return 0;
+    }
+
+    _logger.info('Found ${dataPoints.length} ${syncDataTypeDisplayName(syncType)} data points');
+
+    // Get the wger measurement category ID
+    final categoryId = syncDataTypeToMeasurementCategory(syncType);
+
+    int syncedCount = 0;
+    DateTime? latestSynced;
+
+    for (final point in dataPoints) {
+      try {
+        final value = (point.value as NumericHealthValue).numericValue.toDouble();
+        final timestamp = point.dateFrom;
+
+        // Unit conversion if applicable
+        final displayValue = isMetric ? value : value * kgToLb;
+        final valueRounded = (displayValue * 100).roundToDouble() / 100;
+
+        if (categoryId != null) {
+          // POST to measurement endpoint with known category
+          final body = {
+            'category': categoryId,
+            'value': valueRounded,
+            'date': '${timestamp.year.toString().padLeft(4, '0')}-'
+                '${timestamp.month.toString().padLeft(2, '0')}-'
+                '${timestamp.day.toString().padLeft(2, '0')}',
+            'notes': 'Synced from Apple Health',
+          };
+          await _baseProvider.post(body, _baseProvider.makeUrl(_measurementUrl));
+        } else {
+          // No standard category — log as notes for lean mass
+          _logger.info('No measurement category for ${syncDataTypeDisplayName(syncType)}, '
+              'value=$valueRounded on $timestamp');
+        }
+
+        syncedCount++;
+        if (latestSynced == null || timestamp.isAfter(latestSynced)) {
+          latestSynced = timestamp;
+        }
+      } catch (e) {
+        _logger.warning('Failed to sync ${syncDataTypeDisplayName(syncType)} entry: $e');
+      }
+    }
+
+    if (latestSynced != null) {
+      await prefs.setTypeLastSyncTimestamp(typeKey, latestSynced.toIso8601String());
+    }
+
+    _logger.info('Synced $syncedCount ${syncDataTypeDisplayName(syncType)} entries');
+    _updateTypeState(syncType, syncedCount: syncedCount);
+    return syncedCount;
+  }
+
+  // ───────── Helpers ─────────
+
+  /// Update the per-type state in [typeStates].
+  void _updateTypeState(SyncDataType type, {int syncedCount = 0}) {
+    final current = state.typeStates[type] ?? const SyncTypeState();
+    final updated = current.copyWith(
+      lastSyncCount: current.lastSyncCount + syncedCount,
+      lastSyncTimestamp: DateTime.now(),
+    );
+    final newMap = Map<SyncDataType, SyncTypeState>.from(state.typeStates);
+    newMap[type] = updated;
+    state = state.copyWith(typeStates: newMap);
+  }
+
+  /// Update an individual type's enabled/direction and persist.
+  Future<void> updateTypeConfig(
+    SyncDataType type, {
+    bool? enabled,
+    SyncDirection? direction,
+  }) async {
+    final current = state.typeStates[type] ?? const SyncTypeState();
+    final updated = current.copyWith(
+      enabled: enabled ?? current.enabled,
+      direction: direction ?? current.direction,
+    );
+    final newMap = Map<SyncDataType, SyncTypeState>.from(state.typeStates);
+    newMap[type] = updated;
+    state = state.copyWith(typeStates: newMap);
+    await saveTypeState(type, updated);
+  }
+
+  /// Map [SyncDataType] to [HealthDataType] from the `health` package.
+  static HealthDataType _healthTypeFor(SyncDataType type) {
+    switch (type) {
+      case SyncDataType.weight:
+        return HealthDataType.WEIGHT;
+      case SyncDataType.bodyFat:
+        return HealthDataType.BODY_FAT_PERCENTAGE;
+      case SyncDataType.waist:
+        return HealthDataType.WAIST_CIRCUMFERENCE;
+      case SyncDataType.leanMass:
+        return HealthDataType.LEAN_BODY_MASS;
+      case SyncDataType.workouts:
+        return HealthDataType.WORKOUT;
     }
   }
 }

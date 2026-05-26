@@ -1284,5 +1284,104 @@
   "health": "Health",
   "@health": {
     "description": "Section header for health-related settings"
+  },
+  "syncTypes": "Sync Types",
+  "@syncTypes": {
+    "description": "Heading for the list of per-data-type sync toggles"
+  },
+  "syncNow": "Sync Now",
+  "@syncNow": {
+    "description": "Button label to trigger a manual sync of all data types"
+  },
+  "syncing": "Syncing...",
+  "@syncing": {
+    "description": "Button label shown while a sync operation is in progress"
+  },
+  "syncDirectionPull": "→ wger",
+  "@syncDirectionPull": {
+    "description": "Label indicating pull direction (Apple Health to wger)"
+  },
+  "syncDirectionPush": "→ Health",
+  "@syncDirectionPush": {
+    "description": "Label indicating push direction (wger to Apple Health)"
+  },
+  "syncDirectionBidirectional": "⇄",
+  "@syncDirectionBidirectional": {
+    "description": "Label indicating bidirectional sync"
+  },
+  "syncTypeOff": "Off",
+  "@syncTypeOff": {
+    "description": "Label shown when a sync type is disabled"
+  },
+  "syncCount": "{count} entries",
+  "@syncCount": {
+    "description": "Count of entries synced for a data type",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncedCount": "Synced {count} entries",
+  "@syncedCount": {
+    "description": "Snackbar message after syncing multiple types",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthSyncBodyWeight": "Body Weight",
+  "@healthSyncBodyWeight": {
+    "description": "Label for body weight sync type"
+  },
+  "healthSyncBodyFat": "Body Fat %",
+  "@healthSyncBodyFat": {
+    "description": "Label for body fat percentage sync type"
+  },
+  "healthSyncWaist": "Waist Circumference",
+  "@healthSyncWaist": {
+    "description": "Label for waist circumference sync type"
+  },
+  "healthSyncLeanMass": "Lean Body Mass",
+  "@healthSyncLeanMass": {
+    "description": "Label for lean body mass sync type"
+  },
+  "healthSyncWorkouts": "Workouts",
+  "@healthSyncWorkouts": {
+    "description": "Label for workout sync type"
+  },
+  "syncDirectionTitle": "{type} Sync Direction",
+  "@syncDirectionTitle": {
+    "description": "Title for the sync direction picker bottom sheet",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "syncDirectionPullLabel": "Pull (Health → wger)",
+  "@syncDirectionPullLabel": {
+    "description": "Label for pull-only sync direction option"
+  },
+  "syncDirectionPullSubtitle": "Import data from Apple Health into wger",
+  "@syncDirectionPullSubtitle": {
+    "description": "Subtitle describing pull sync"
+  },
+  "syncDirectionPushLabel": "Push (wger → Health)",
+  "@syncDirectionPushLabel": {
+    "description": "Label for push-only sync direction option"
+  },
+  "syncDirectionPushSubtitle": "Export wger data to Apple Health",
+  "@syncDirectionPushSubtitle": {
+    "description": "Subtitle describing push sync"
+  },
+  "syncDirectionBidirectionalLabel": "Bidirectional",
+  "@syncDirectionBidirectionalLabel": {
+    "description": "Label for bidirectional sync direction option"
+  },
+  "syncDirectionBidirectionalSubtitle": "Sync both directions",
+  "@syncDirectionBidirectionalSubtitle": {
+    "description": "Subtitle describing bidirectional sync"
   }
 }

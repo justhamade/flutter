@@ -137,6 +137,11 @@ class PreferenceHelper {
   static const _healthSyncEnabledKey = 'healthSyncEnabled';
   static const _lastHealthSyncTimestampKey = 'lastHealthSyncTimestamp';
 
+  // Per-type sync preferences
+  static String _typeEnabledKey(String type) => 'healthSync_${type}_enabled';
+  static String _typeDirectionKey(String type) => 'healthSync_${type}_direction';
+  static String _typeLastSyncKey(String type) => 'healthSync_${type}_lastTimestamp';
+
   Future<void> setHealthSyncEnabled(bool value) async {
     await PreferenceHelper.asyncPref.setBool(_healthSyncEnabledKey, value);
   }
@@ -154,8 +159,41 @@ class PreferenceHelper {
     return PreferenceHelper.asyncPref.getString(_lastHealthSyncTimestampKey);
   }
 
+  /// Per-type: enabled toggle
+  Future<void> setTypeSyncEnabled(String type, bool value) async {
+    await PreferenceHelper.asyncPref.setBool(_typeEnabledKey(type), value);
+  }
+
+  Future<bool> getTypeSyncEnabled(String type) async {
+    return await PreferenceHelper.asyncPref.getBool(_typeEnabledKey(type)) ?? true;
+  }
+
+  /// Per-type: direction (pull, push, bidirectional)
+  Future<void> setTypeSyncDirection(String type, String direction) async {
+    await PreferenceHelper.asyncPref.setString(_typeDirectionKey(type), direction);
+  }
+
+  Future<String> getTypeSyncDirection(String type) async {
+    return await PreferenceHelper.asyncPref.getString(_typeDirectionKey(type)) ?? 'pull';
+  }
+
+  /// Per-type: last sync timestamp
+  Future<void> setTypeLastSyncTimestamp(String type, String value) async {
+    await PreferenceHelper.asyncPref.setString(_typeLastSyncKey(type), value);
+  }
+
+  Future<String?> getTypeLastSyncTimestamp(String type) async {
+    return PreferenceHelper.asyncPref.getString(_typeLastSyncKey(type));
+  }
+
   Future<void> clearHealthSyncPreferences() async {
     await PreferenceHelper.asyncPref.remove(_healthSyncEnabledKey);
     await PreferenceHelper.asyncPref.remove(_lastHealthSyncTimestampKey);
+    // Clear per-type prefs for all known types
+    for (final type in ['weight', 'bodyFat', 'waist', 'leanMass', 'workouts']) {
+      await PreferenceHelper.asyncPref.remove(_typeEnabledKey(type));
+      await PreferenceHelper.asyncPref.remove(_typeDirectionKey(type));
+      await PreferenceHelper.asyncPref.remove(_typeLastSyncKey(type));
+    }
   }
 }
