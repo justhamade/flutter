@@ -42,7 +42,7 @@ final class HealthSyncNotifierProvider
 }
 
 String _$healthSyncNotifierHash() =>
-    r'9547a85d584458e5e399b14c03ef387937d2038c';
+    r'3d1741857ee5d3eff724056e8b4ec70c4ea1e82e';
 
 abstract class _$HealthSyncNotifier extends $Notifier<HealthSyncState> {
   HealthSyncState build();

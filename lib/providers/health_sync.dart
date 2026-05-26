@@ -26,6 +26,7 @@ import 'package:wger/models/body_weight/weight_entry.dart';
 import 'package:wger/models/measurements/measurement_entry.dart';
 import 'package:wger/providers/base_provider.dart';
 import 'package:wger/providers/health_sync_config.dart';
+import 'package:wger/providers/health_sync_workout.dart';
 import 'package:wger/providers/wger_base_riverpod.dart';
 
 part 'health_sync.g.dart';
@@ -95,6 +96,7 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
   final _logger = Logger('HealthSyncNotifier');
   late final Health _health;
   late final WgerBaseProvider _baseProvider;
+  late final WorkoutSyncService _workoutSync;
 
   static const _weightEntryUrl = 'weightentry';
   static const _measurementUrl = 'measurement';
@@ -103,6 +105,7 @@ class HealthSyncNotifier extends _$HealthSyncNotifier {
   HealthSyncState build() {
     _health = Health();
     _baseProvider = ref.read(wgerBaseProvider);
+    _workoutSync = WorkoutSyncService(_health, _baseProvider);
 
     // Load persisted sync preference on startup
     _loadPersistedState();
@@ -270,8 +273,14 @@ case SyncDataType.bodyFat:
                 );
               }
           case SyncDataType.workouts:
-            // TODO: Implement workout sync in a follow-up module
-            _logger.info('Workout sync not yet implemented — skipping');
+              if (typeState.direction == SyncDirection.pull ||
+                  typeState.direction == SyncDirection.bidirectional) {
+                totalCount += await _workoutSync.pullWorkouts(isMetric: isMetric);
+              }
+              if (typeState.direction == SyncDirection.push ||
+                  typeState.direction == SyncDirection.bidirectional) {
+                totalCount += await _workoutSync.pushWorkouts();
+              }
         }
       }
     } catch (e) {
