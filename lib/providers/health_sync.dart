@@ -803,16 +803,18 @@ case SyncDataType.bodyFat:
 
   /// Check which health data types are missing READ permissions.
   ///
-  /// Returns a list of missing [SyncDataType] values so the UI can
-  /// prompt the user to enable them in Settings.
+  /// On iOS, HealthKit does not reliably report READ permission status
+  /// (Apple privacy model — can't distinguish 'denied' from 'not requested').
+  /// This method is most reliable on Android; on iOS it returns empty.
   Future<List<SyncDataType>> getMissingPermissions() async {
     final missing = <SyncDataType>[];
+    if (!Platform.isAndroid) return missing;
+
     await _health.configure();
 
     for (final type in allSyncDataTypes) {
       final healthType = _healthTypeFor(type);
       if (type == SyncDataType.workouts) {
-        // Workout permissions checked separately
         continue;
       }
       final hasPerms = await _health.hasPermissions(
@@ -821,17 +823,6 @@ case SyncDataType.bodyFat:
       );
       if (hasPerms != true) {
         missing.add(type);
-      }
-    }
-
-    // Also check additional health metrics
-    for (final metric in additionalHealthMetrics) {
-      final hasPerms = await _health.hasPermissions(
-        [metric.healthType],
-        permissions: [HealthDataAccess.READ],
-      );
-      if (hasPerms != true) {
-        _logger.info('Missing permission for ${metric.displayName}');
       }
     }
 

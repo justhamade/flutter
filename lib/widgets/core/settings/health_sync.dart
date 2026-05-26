@@ -1,21 +1,3 @@
-/*
- * This file is part of wger Workout Manager <https://github.com/wger-project>.
- * Copyright (c) 2026 wger Team
- *
- * wger Workout Manager is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
@@ -179,8 +161,6 @@ class _MissingPermissionsBannerState
     setState(() => _isRequesting = true);
     try {
       final notifier = ref.read(healthSyncProvider.notifier);
-      // Request authorization for only the missing types
-      // iOS will show a new prompt for types not previously requested
       final count = await notifier.requestMissingPermissions(
         isMetric: provider.Provider.of<UserProvider>(context, listen: false)
                 .profile
@@ -196,7 +176,6 @@ class _MissingPermissionsBannerState
           );
         }
       }
-      // Re-check permissions
       await _checkPermissions();
     } catch (_) {
       // Best effort
