@@ -283,6 +283,9 @@ case SyncDataType.bodyFat:
               }
         }
       }
+
+      // Sync additional health metrics (always pull-only for now)
+      totalCount += await _pullHealthMetrics(isMetric: isMetric);
     } catch (e) {
       _logger.warning('Health sync orchestrator failed: $e');
     }
@@ -781,5 +784,130 @@ case SyncDataType.bodyFat:
       case SyncDataType.workouts:
         return HealthDataType.WORKOUT;
     }
+  }
+
+  // ───────── Additional Health Metrics ─────────
+
+  /// Pull additional health metrics from Apple Health into wger measurements.
+  Future<int> _pullHealthMetrics({bool isMetric = true}) async {
+    if (!Platform.isIOS) return 0;
+
+    final prefs = PreferenceHelper.instance;
+    final enabled = await prefs.getHealthSyncEnabled();
+    if (!enabled) return 0;
+
+    int totalCount = 0;
+
+    for (final metric in additionalHealthMetrics) {
+      try {
+        final hasPerms = await _health.hasPermissions(
+          [metric.healthType],
+          permissions: [HealthDataAccess.READ],
+        );
+        if (hasPerms != true) {
+          _logger.fine('No permission for ${metric.displayName} — skipping');
+          continue;
+        }
+
+        final cacheKey = 'metric_cat_${metric.categoryName}';
+        String? catIdStr = await prefs.getTypeLastSyncTimestamp(cacheKey);
+        int? categoryId = catIdStr != null ? int.tryParse(catIdStr) : null;
+
+        if (categoryId == null) {
+          final cats = await _baseProvider.fetchPaginated(
+            _baseProvider.makeUrl('measurement-category', query: {'limit': '100'}),
+          );
+          for (final c in cats) {
+            if (c['name'] == metric.categoryName) {
+              categoryId = c['id'] as int;
+              break;
+            }
+          }
+
+          if (categoryId == null) {
+            try {
+              final created = await _baseProvider.post(
+                {'name': metric.categoryName, 'unit': metric.categoryUnit},
+                _baseProvider.makeUrl('measurement-category'),
+              );
+              categoryId = created['id'] as int;
+            } catch (e) {
+              _logger.warning('Failed to create category for ${metric.displayName}: $e');
+              continue;
+            }
+          }
+
+          await prefs.setTypeLastSyncTimestamp(cacheKey, categoryId.toString());
+        }
+
+        final lastSyncStr = await prefs.getTypeLastSyncTimestamp(
+          'metric_${metric.categoryName}',
+        );
+        final startTime = lastSyncStr != null ? DateTime.parse(lastSyncStr) : DateTime(2000);
+        final endTime = DateTime.now();
+
+        _logger.info('Pulling ${metric.displayName} from $startTime to $endTime');
+
+        List<HealthDataPoint> dataPoints;
+        try {
+          dataPoints = await _health.getHealthDataFromTypes(
+            types: [metric.healthType],
+            startTime: startTime,
+            endTime: endTime,
+          );
+        } catch (e) {
+          _logger.warning('Failed to read ${metric.displayName}: $e');
+          continue;
+        }
+        dataPoints = _health.removeDuplicates(dataPoints);
+
+        if (dataPoints.isEmpty) {
+          _logger.fine('No new ${metric.displayName} data');
+          continue;
+        }
+
+        int syncedCount = 0;
+        DateTime? latestSynced;
+
+        for (final point in dataPoints) {
+          try {
+            final value = (point.value as NumericHealthValue).numericValue.toDouble();
+            final timestamp = point.dateFrom;
+            final valueRounded = (value * 100).roundToDouble() / 100;
+
+            final body = {
+              'category': categoryId,
+              'value': valueRounded,
+              'date': '${timestamp.year.toString().padLeft(4, '0')}-'
+                  '${timestamp.month.toString().padLeft(2, '0')}-'
+                  '${timestamp.day.toString().padLeft(2, '0')}',
+              'notes': 'Synced from Apple Health',
+            };
+            await _baseProvider.post(body, _baseProvider.makeUrl(_measurementUrl));
+
+            syncedCount++;
+            if (latestSynced == null || timestamp.isAfter(latestSynced)) {
+              latestSynced = timestamp;
+            }
+          } catch (e) {
+            _logger.warning('Failed to sync ${metric.displayName} entry: $e');
+          }
+        }
+
+        if (latestSynced != null) {
+          await prefs.setTypeLastSyncTimestamp(
+            'metric_${metric.categoryName}',
+            latestSynced.toIso8601String(),
+          );
+        }
+
+        _logger.info('Synced $syncedCount ${metric.displayName} entries');
+        totalCount += syncedCount;
+      } catch (e) {
+        _logger.warning('Error syncing ${metric.displayName}: $e');
+      }
+    }
+
+    return totalCount;
   }
 }

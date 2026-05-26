@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import 'package:health/health.dart';
 import 'package:wger/helpers/shared_preferences.dart';
 
 /// Supported health data types for sync.
@@ -210,6 +211,72 @@ Future<void> saveTypeState(SyncDataType type, SyncTypeState state) async {
 
 /// The set of data types that correspond to Apple Health body measurements.
 const bodyCompDataTypes = {SyncDataType.bodyFat, SyncDataType.waist, SyncDataType.leanMass};
+
+/// Additional health metrics that can be pulled into wger measurements.
+///
+/// Each entry defines the mapping from an Apple Health data type to a wger
+/// measurement category (auto-created on first sync if it doesn't exist).
+class HealthMetricDefinition {
+  final HealthDataType healthType;
+  final String displayName;
+  final String categoryName;
+  final String categoryUnit;
+  final String iconName;
+
+  const HealthMetricDefinition({
+    required this.healthType,
+    required this.displayName,
+    required this.categoryName,
+    required this.categoryUnit,
+    required this.iconName,
+  });
+}
+
+/// All supported additional health metrics.
+const additionalHealthMetrics = [
+  HealthMetricDefinition(
+    healthType: HealthDataType.RESTING_HEART_RATE,
+    displayName: 'Resting Heart Rate',
+    categoryName: 'Resting Heart Rate',
+    categoryUnit: 'bpm',
+    iconName: 'favorite',
+  ),
+  HealthMetricDefinition(
+    healthType: HealthDataType.STEPS,
+    displayName: 'Steps',
+    categoryName: 'Steps',
+    categoryUnit: 'steps',
+    iconName: 'directions_walk',
+  ),
+  HealthMetricDefinition(
+    healthType: HealthDataType.ACTIVE_ENERGY_BURNED,
+    displayName: 'Active Energy',
+    categoryName: 'Active Energy',
+    categoryUnit: 'kcal',
+    iconName: 'local_fire_department',
+  ),
+  HealthMetricDefinition(
+    healthType: HealthDataType.BLOOD_PRESSURE_SYSTOLIC,
+    displayName: 'Blood Pressure (Systolic)',
+    categoryName: 'Blood Pressure Systolic',
+    categoryUnit: 'mmHg',
+    iconName: 'monitor_heart',
+  ),
+  HealthMetricDefinition(
+    healthType: HealthDataType.BLOOD_PRESSURE_DIASTOLIC,
+    displayName: 'Blood Pressure (Diastolic)',
+    categoryName: 'Blood Pressure Diastolic',
+    categoryUnit: 'mmHg',
+    iconName: 'monitor_heart',
+  ),
+  HealthMetricDefinition(
+    healthType: HealthDataType.BODY_WATER_MASS,
+    displayName: 'Body Water',
+    categoryName: 'Body Water',
+    categoryUnit: '%',
+    iconName: 'water_drop',
+  ),
+];
 
 /// The set of data types that have a wger measurement category mapping.
 const measurementSyncDataTypes = {SyncDataType.bodyFat, SyncDataType.waist};

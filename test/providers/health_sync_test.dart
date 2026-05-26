@@ -17,6 +17,7 @@
  */
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:health/health.dart';
 import 'package:wger/providers/health_sync.dart';
 import 'package:wger/providers/health_sync_config.dart';
 
@@ -178,6 +179,33 @@ void main() {
         SyncDataType.leanMass,
       ]));
       expect(bodyCompDataTypes.length, 3);
+    });
+  });
+
+  group('Additional health metrics', () {
+    test('has 6 health metrics defined', () {
+      expect(additionalHealthMetrics.length, 6);
+    });
+
+    test('each metric has required fields', () {
+      for (final metric in additionalHealthMetrics) {
+        expect(metric.displayName, isNotEmpty);
+        expect(metric.categoryName, isNotEmpty);
+        expect(metric.categoryUnit, isNotEmpty);
+        expect(metric.iconName, isNotEmpty);
+      }
+    });
+
+    test('metrics include expected types', () {
+      final types = additionalHealthMetrics.map((m) => m.healthType).toSet();
+      expect(types, containsAll([
+        HealthDataType.RESTING_HEART_RATE,
+        HealthDataType.STEPS,
+        HealthDataType.ACTIVE_ENERGY_BURNED,
+        HealthDataType.BLOOD_PRESSURE_SYSTOLIC,
+        HealthDataType.BLOOD_PRESSURE_DIASTOLIC,
+        HealthDataType.BODY_WATER_MASS,
+      ]));
     });
   });
 }
